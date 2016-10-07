@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "target": "ES5",
+        "sourceMap": true,
+        "declaration": false,
+        "module": "commonjs",
+        "strictNullChecks": true,
+        "types": ["mocha", "chai", "node" ]
+    },
+    "include": [
+        "tests/spec/**/*.ts",
+        "tests/*.ts"
+    ]
+}

@@ -1,0 +1,10 @@
+*.tmp
+*.swp
+.DS_Store
+node_modules/
+dist/
+npm-debug.log
+.vscode/
+tests/**/*.js
+tests/**/*.js.map
+
