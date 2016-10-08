@@ -1,5 +1,11 @@
 var factories = [];
 
+declare var chaiAsPromised;
+if (typeof window !== "undefined") {
+    chai.use(chaiAsPromised);
+    chai.should();
+}
+
 // structure of a pubsub implementation factory:
 // interface sampleFactory  {
 
