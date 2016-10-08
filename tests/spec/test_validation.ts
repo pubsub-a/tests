@@ -1,5 +1,8 @@
 if (typeof window === "undefined") {
-    var c = require("chai");
+    var c = require('chai');
+    let chaiAsPromised = require("chai-as-promised");
+    c.use(chaiAsPromised);
+    c.should();
     var expect = c.expect;
     var Rx = require('rxjs/Rx');
     var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
@@ -80,18 +83,18 @@ var executeValidationTests = (factory) => {
         });
 
         it("should make sure a topic can only be of type string", () => {
-            expect(() => channel.publish(undefined, "foo")).to.throw();
-            expect(() => channel.publish(null, "foo")).to.throw();
-            expect(() => channel.publish({}, "foo")).to.throw();
-            expect(() => channel.publish([], "foo")).to.throw();
-            expect(() => channel.publish(['a'], "foo")).to.throw();
+            expect(() => channel.publish(undefined, "foo")).to.throw().and.be.an.instanceOf(Error);
+            expect(() => channel.publish(null, "foo")).to.throw().and.be.an.instanceOf(Error);
+            expect(() => channel.publish({}, "foo")).to.throw().and.be.an.instanceOf(Error);
+            expect(() => channel.publish([], "foo")).to.throw().and.be.an.instanceOf(Error);
+            expect(() => channel.publish(['a'], "foo")).to.throw().and.be.an.instanceOf(Error);
 
             const empty = () => void 0;
-            expect(() => channel.subscribe(undefined, empty)).to.throw();
-            expect(() => channel.subscribe(null, empty)).to.throw();
-            expect(() => channel.subscribe({}, empty)).to.throw();
-            expect(() => channel.subscribe([], empty)).to.throw();
-            expect(() => channel.subscribe(['a'], empty)).to.throw();
+            expect(() => channel.subscribe(undefined, empty)).to.throw().and.be.an.instanceOf(Error);
+            expect(() => channel.subscribe(null, empty)).to.throw().and.be.an.instanceOf(Error);
+            expect(() => channel.subscribe({}, empty)).to.throw().and.be.an.instanceOf(Error);
+            expect(() => channel.subscribe([], empty)).to.throw().and.be.an.instanceOf(Error);
+            expect(() => channel.subscribe(['a'], empty)).to.throw().and.be.an.instanceOf(Error);
         });
 
         it("should make sure a channel name can consist of valid characters and be between 1 to 255 characters long", (done) => {
@@ -139,7 +142,7 @@ var executeValidationTests = (factory) => {
 
             expect(() => {
                 channel.publish(randomValidChannelOrTopicName(), non_plain_object);
-            }).to.throw();
+            }).to.throw().and.be.an.instanceOf(Error);
             done();
         });
 

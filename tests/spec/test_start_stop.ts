@@ -1,5 +1,8 @@
 if (typeof window === "undefined") {
-    let c = require('chai');
+    var c = require('chai');
+    let chaiAsPromised = require("chai-as-promised");
+    c.use(chaiAsPromised);
+    c.should();
     var expect = c.expect;
     var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
 }
@@ -9,10 +12,15 @@ const executeStartStopTests = (factory) => {
     describe(`['${factory.name}] should pass the start/stop implementation test`, () => {
 
         let pubsub;
+        let topic;
+        let channel_name;
+        let channel;
 
-        beforeEach(done => {
+        beforeEach(() => {
             pubsub = factory.getPubSubImplementation();
-            done();
+            topic = randomValidChannelOrTopicName();
+            channel_name = randomValidChannelOrTopicName();
+            return pubsub.start().then(() => pubsub.channel(channel_name).then(chan => channel = chan))
         });
 
         it("should pass the same pubsub instance as returned in the promise in the callback function", () => {
@@ -36,24 +44,23 @@ const executeStartStopTests = (factory) => {
         it("should throw an error if calling start() again after the stop() function", () => {
             return pubsub.start()
                 .then(() => pubsub.stop())
-                .then(() => {
-                    expect(() => pubsub.start()).to.throw();
-                });
+                .then(() => pubsub.start())
+                .should.eventually.be.rejected;
         });
 
         it("should be allowed to call stop multiple times", () => {
             return pubsub.start().then(() => {
-                expect(() => {
-                    pubsub.stop();
-                    pubsub.stop();
-                    pubsub.stop();
-                }).not.to.throw();
+                return Promise.all([
+                    pubsub.stop(),
+                    pubsub.stop(),
+                    pubsub.stop(),
+                ]).should.eventually.be.fulfilled;
             });
         });
 
         it("should trigger the stop callback after the pubsub was stopped", done => {
-            pubsub.start().then(() => {
-                pubsub.stop(() => {
+            pubsub.start()
+                .then(() => { pubsub.stop(() => {
                     expect(true).to.be.ok;
                     done();
                 })
@@ -63,39 +70,47 @@ const executeStartStopTests = (factory) => {
         it("should resolve the promise after the pubsub was stopped", () => {
             return pubsub.start()
                 .then(() => pubsub.stop())
-                .then(() => {
-                    expect(true).to.be.ok;
-                });
+                .should.eventually.be.fulfilled;
         })
 
-        it("should not be possible to publish/subscribe after the .stop function has been called", () => {
-            const topic = randomValidChannelOrTopicName();
-
-            return pubsub.start()
-                .then(() => pubsub.channel(topic))
-                .then(channel => {
-                    pubsub.stop();
-
-                    expect(() => {
-                        channel.publish(topic, "foo");
-                    }).to.throw();
-
-                    expect(() => {
-                        channel.subscribe(topic, () => void 0);
-                    }).to.throw();
-                })
+        it("should reject the promise when calling publish after the .stop function has been called", () => {
+            return pubsub.stop()
+                .then(() => channel.publish(topic, "foo"))
+                .should.eventually.be.rejected
+                .and.be.an.instanceOf(Error);
         });
 
-        it("should not be possible to create a channel if the .stop function has been called", () => {
-            const topic = randomValidChannelOrTopicName();
-
-            return pubsub.start()
-                .then(() => pubsub.stop())
-                .then(() => {
-                    expect(() => {
-                        pubsub.channel(topic, () => void 0);
-                    }).to.throw();
+        it("should set the error object in the callback when calling publish after the .stop function has been called", done => {
+            pubsub.stop().then(() => {
+                channel.publish(topic, "empty", error => {
+                    expect(error).to.be.defined;
+                    expect(error).to.be.an.instanceOf(Error);
+                    done();
                 });
+            });
+        });
+
+        it("should reject the promise when calling subscribe after the .stop function has been called", () => {
+            return pubsub.stop()
+                .then(() => channel.subscribe(topic, () => void 0))
+                .should.eventually.be.rejected
+                .and.be.an.instanceOf(Error);
+        });
+
+        it("should set the error object in the callback when calling subscribe after the .stop function has been called", done => {
+            pubsub.stop().then(() => {
+                channel.subscribe(topic, () => void 0, (token, topic, error) => {
+                    expect(error).to.be.defined;
+                    expect(error).to.be.an.instanceOf(Error);
+                    done();
+                });
+            });
+        });
+
+        it("should reject the promise when creating a channel if the .stop function has been called", () => {
+            return pubsub.stop().then(() => pubsub.channel(topic, () => void 0))
+            .should.eventually.be.rejected
+            .and.be.an.instanceOf(Error);
         });
     });
 }
