@@ -1,0 +1,14 @@
+sudo: false
+language: node_js
+node_js:
+  - 'node'
+  - 4
+
+install:
+  # newer npm spinner is just a pain and will mess up in the logfiles
+  - npm config set spin=false
+  - npm install
+
+script:
+  # compile main source
+  - npm run build
