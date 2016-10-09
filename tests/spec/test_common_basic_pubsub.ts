@@ -93,14 +93,13 @@ const executeCommonBasicPubSubTests = (factory) => {
             const p1 = channel.subscribe('topic', () => count += 1);
             const p2 = channel.subscribe('topic', () => count += 1000);
 
-            Promise.all([p1, p2]).then(() => channel.publish('topic', true));
-
-            // each subscription should have fired exactly one time
-            // TODO use promises over setTimeout
-            setTimeout(function() {
+            Promise.all([p1, p2]).then(() => channel.publish('topic', true)).then(() => {
                 expect(count).to.equal(1001);
-                done();
-            }, 1000);
+                // each subscription should have fired exactly one time
+                setTimeout(function() {
+                    done();
+                }, 1000);
+            })
         });
 
         it('should execute the subscriptions in the order they were added', (done) => {

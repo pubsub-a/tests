@@ -40,24 +40,23 @@ const executeDisconnectTests = (factory) => {
         });
 
         it("should be able to subscribe to a disconnect event", function(done) {
-            if (!pubsub1.pubsub.socket || !pubsub1.pubsub.socket.id) {
+            if (factory.name == "PubSubMicro") {
                 this.skip();
                 return;
             }
-
-            const id1 = pubsub1.pubsub.socket.id;
-            const id2 = pubsub2.pubsub.socket.id;
+            const id1 = pubsub1.pubsub.server.id;
+            const id2 = pubsub2.pubsub.server.id;
 
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal", (internalChannel) => {
                 internalChannel.subscribe("client_disconnected", (clientUuid) => {
                     expect(clientUuid).to.equal(id2);
                     done();
-                });
-                internalChannel.publish("subscribe_disconnect", id2);
-                setTimeout(() => {
-                    pubsub2.stop();
-                }, 500);
+                }).then(() => {
+                    internalChannel.publish("subscribe_disconnect", id2).then(() => {
+                        pubsub2.stop();
+                    })
+                })
             });
         });
     });
