@@ -54,7 +54,9 @@ const executeDisconnectTests = (factory) => {
                     done();
                 }).then(() => {
                     internalChannel.publish("subscribe_disconnect", id2).then(() => {
-                        pubsub2.stop();
+                        setTimeout(() => {
+                            pubsub2.stop();
+                        }, 1000);
                     })
                 })
             });
