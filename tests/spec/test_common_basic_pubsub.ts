@@ -4,6 +4,7 @@ if (typeof window === "undefined") {
     var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
     var Rx = require('rxjs/Rx');
     var Promise = require("es6-promise").Promise;
+    randomString = require("../test_helper").randomString as (length: number) => string;
 }
 
 const executeCommonBasicPubSubTests = (factory) => {
