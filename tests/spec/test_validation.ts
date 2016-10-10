@@ -118,7 +118,26 @@ var executeValidationTests = (factory) => {
             expect(() => channel.subscribe("Foobar1234_:/-", () => void 0)).not.to.throw();
         });
 
-        it("should make sure a topic with special sequence can be published to", () => {
+        it("should make sure a topic with special sequence can only be published to if specified in the settings", function() {
+            // TODO this is a pubsub-micro only specific test
+            // Move it elsewhere?
+            if (factory.name == "PubSubNodeClient") {
+                this.skip();
+                return;
+            }
+
+            expect(() => channel.publish("Foobar_$_Foobar")).to.throw();
+            expect(() => channel.publish("Foobar_%_Foobar")).to.throw();
+
+            expect(() => channel.subscribe("Foobar_$_Foobar", () => void 0)).to.throw();
+            expect(() => channel.subscribe("Foobar_%_Foobar", () => void 0)).to.throw();
+
+            (pubsub as any).setTopicChannelNameSettings({
+                channelNameMaxLength: 63,
+                topicNameMaxLength: 255,
+                allowSpecialTopicSequences: true
+            });
+
             expect(() => channel.publish("Foobar_$_Foobar")).not.to.throw();
             expect(() => channel.publish("Foobar_%_Foobar")).not.to.throw();
 
