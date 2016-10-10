@@ -44,7 +44,7 @@ const executeHighLoadTests = (factory) => {
             this.timeout(60000);
             let subscriptionsRegistered = 10000;
             let subscriptionsDisposed = 10000;
-            const payload  = "foobar";
+            const payload  = randomString(5 * 1024);
 
             while(subscriptionsRegistered > 0) {
                 const topic = randomValidChannelOrTopicName();
@@ -107,17 +107,38 @@ const executeHighLoadTests = (factory) => {
             const topic = randomValidChannelOrTopicName();
             let numPublishes = 10000;
             let numTriggered = 10000;
+            let payloadSize = 5 * 1024;
 
             channel1.subscribe(topic, (payload) => {
-                expect(payload.length).to.equal(1024 * 5);
-                if (--numTriggered == 0)
+                if (--numTriggered <= 0) {
+                    let stop = new Date().getTime();
                     done();
+                }
             }).then(() => {
                 while (numPublishes-- > 0) {
-                    channel2.publish(topic, randomString(1024 * 5));
+                    channel2.publish(topic, randomString(payloadSize));
                 }
             });
         })
+
+        // requires a server than answers every ping with a pong
+        // it("should play ping pong", function(done) {
+        //     let receivedPongs = 10000;
+        //     let numPings = 10000;
+        //     let payload = randomString(5 * 1024);
+        //     this.timeout(60000);
+
+        //     pubsub1.channel("pingpong", chan => {
+        //         chan.subscribe("pong", p => {
+        //             if(--receivedPongs <= 0)
+        //                 done();
+        //             else
+        //                 chan.publish("ping", payload);
+        //         }).then(() => {
+        //             chan.publish("ping", payload);
+        //         });
+        //     });
+        // })
     });
 };
 
