@@ -3,7 +3,6 @@ if (typeof window === "undefined") {
     let c = require("chai");
     var expect = c.expect;
     var Rx = require('rxjs/Rx');
-    var Promise = require("es6-promise").Promise;
 }
 
 const executeChannelTests = (factory) => {

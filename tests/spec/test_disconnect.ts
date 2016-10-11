@@ -2,7 +2,6 @@
 if (typeof window === "undefined") {
     let c = require("chai");
     var expect = c.expect;
-    var Promise = require("es6-promise").Promise;
 }
 
 const executeDisconnectTests = (factory) => {

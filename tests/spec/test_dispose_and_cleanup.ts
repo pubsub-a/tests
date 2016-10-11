@@ -3,7 +3,6 @@ if (typeof window === "undefined") {
     var expect = c.expect;
     var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
     var Rx = require('rxjs/Rx');
-    var Promise = require("es6-promise").Promise;
 }
 
 const executeDisposeAndCleanupTests = (factory) => {
