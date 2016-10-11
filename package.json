@@ -32,5 +32,8 @@
     "node-tests": "mocha tests/test.js",
     "browser-tests": "karma start",
     "test": "npm run build && npm run node-tests && npm run browser-tests"
+  },
+  "dependencies": {
+    "es6-promise": "^4.0.5"
   }
 }
