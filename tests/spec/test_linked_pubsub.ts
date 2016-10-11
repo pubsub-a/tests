@@ -40,8 +40,10 @@ const executeLinkedPubSubTests = (factory) => {
 
         it("should receive a simple publish across linked instances", done => {
             let topic = randomValidChannelOrTopicName();
-            channel1.subscribe(topic, payload => {
-                expect(payload).to.equal("foobar");
+            let payload = "foobar";
+
+            channel1.subscribe(topic, p => {
+                expect(p).to.equal(payload);
                 done();
             }, () => {
                 channel2.publish(topic, "foobar");
@@ -50,12 +52,34 @@ const executeLinkedPubSubTests = (factory) => {
 
         it("should fire the local subscription only once if we locally publish", done => {
             let topic = randomValidChannelOrTopicName();
-            channel2.subscribe(topic, payload => undefined);
-            channel1.subscribe(topic, payload => {
-                expect(payload).to.equal("foobar");
+            let payload = "foobar";
+
+            channel2.subscribe(topic, () => void 0);
+            channel1.subscribe(topic, p => {
+                expect(p).to.equal(payload);
                 done();
             }, () => {
-                channel1.publish(topic, "foobar");
+                channel1.publish(topic, payload);
+            });
+        });
+
+        // TODO for optimization in the future this might change so that local subscribers don't get publishes via the network that they
+        // published themselves
+        it("should fire local subscriptions via the network and notbut pass the same object reference to local subscribers", function(done) {
+            if (factory.name == "PubSubMicro") {
+                this.skip();
+                return;
+            }
+
+            let topic = randomValidChannelOrTopicName();
+            let payload = { foo: "bar" };
+
+            channel2.subscribe(topic, () => void 0);
+            channel1.subscribe(topic, p => {
+                expect(p).not.to.equal(payload);
+                done();
+            }, () => {
+                channel1.publish(topic, payload);
             });
         });
 
