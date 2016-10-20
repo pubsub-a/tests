@@ -1,13 +1,9 @@
 {
   "name": "pubsub-a-tests",
   "private": false,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pubsub-a/pubsub-a-tests.git"
-  },
   "version": "0.1.0",
   "description": "PubSub/A spec test suite",
-  "license": "AGPL",
+  "license": "UNLICENSED",
   "devDependencies": {
     "@types/chai": "^3.4.29",
     "@types/mocha": "^2.2.28",
