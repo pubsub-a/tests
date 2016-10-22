@@ -38,7 +38,7 @@ const executeLinkedPubSubTests = (factory) => {
             });
         });
 
-        it("should receive a simple publish across linked instances", done => {
+        it("should receive a simple publish across linked instances using Callback", done => {
             let topic = randomValidChannelOrTopicName();
             let payload = "foobar";
 
@@ -46,6 +46,18 @@ const executeLinkedPubSubTests = (factory) => {
                 expect(p).to.equal(payload);
                 done();
             }, () => {
+                channel2.publish(topic, "foobar");
+            });
+        });
+
+        it("should receive a simple publish across linked instances using Promise", done => {
+            let topic = randomValidChannelOrTopicName();
+            let payload = "foobar";
+
+            channel1.subscribe(topic, p => {
+                expect(p).to.equal(payload);
+                done();
+            }).then(() => {
                 channel2.publish(topic, "foobar");
             });
         });
@@ -65,7 +77,7 @@ const executeLinkedPubSubTests = (factory) => {
 
         // TODO for optimization in the future this might change so that local subscribers don't get publishes via the network that they
         // published themselves
-        it("should fire local subscriptions via the network and notbut pass the same object reference to local subscribers", function(done) {
+        it("should fire local subscriptions via the network and not pass the same object reference to local subscribers", function(done) {
             if (factory.name == "PubSubMicro") {
                 this.skip();
                 return;
