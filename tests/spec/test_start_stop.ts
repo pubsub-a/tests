@@ -41,6 +41,42 @@ const executeStartStopTests = (factory) => {
             });
         });
 
+        it("should set a clientId after start() is done via promise", function(done) {
+            if (factory.name == "PubSubMicro") {
+                this.skip();
+                return;
+            }
+
+            pubsub.start()
+                .then(() => {
+                    try {
+                        expect(pubsub.clientId).to.be.defined;
+                        expect(pubsub.clientId).to.be.a("string");
+                        expect(pubsub.clientId.length).to.be.greaterThan(4);
+                        done();
+                    } catch (err) {
+                        done(err);
+                    }
+                });
+        })
+
+        it("should set a clientId after start() is done via callback", function(done) {
+            if (factory.name == "PubSubMicro") {
+                this.skip();
+                return;
+            }
+            pubsub.start(() => {
+                try {
+                    expect(pubsub.clientId).to.be.defined;
+                    expect(pubsub.clientId).to.be.a("string");
+                    expect(pubsub.clientId.length).to.be.greaterThan(4);
+                    done();
+                } catch (err) {
+                    done(err);
+                }
+            })
+        })
+
         it("should throw an error if calling start() again after the stop() function", () => {
             return pubsub.start()
                 .then(() => pubsub.stop())

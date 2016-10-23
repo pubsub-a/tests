@@ -43,8 +43,8 @@ const executeDisconnectTests = (factory) => {
                 this.skip();
                 return;
             }
-            const id1 = pubsub1.pubsub.server.id;
-            const id2 = pubsub2.pubsub.server.id;
+            const id1 = pubsub1.clientId;
+            const id2 = pubsub2.clientId;
 
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal", (internalChannel) => {
