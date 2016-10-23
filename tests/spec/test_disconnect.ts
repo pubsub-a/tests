@@ -38,7 +38,7 @@ const executeDisconnectTests = (factory) => {
             });
         });
 
-        it("should be able to subscribe to a disconnect event", function(done) {
+        it("should be able to subscribe to a disconnect event from other clients", function(done) {
             if (factory.name == "PubSubMicro") {
                 this.skip();
                 return;
@@ -52,9 +52,10 @@ const executeDisconnectTests = (factory) => {
                     expect(clientUuid).to.equal(id2);
                     done();
                 }).then(() => {
-                    internalChannel.publish("subscribe_disconnect", id2).then(() => {
+                    const internalMessage = { payload: id2, callback: () => {
                         pubsub2.stop();
-                    })
+                    } };
+                    internalChannel.publish("subscribe_disconnect", internalMessage);
                 })
             });
         });
@@ -74,17 +75,16 @@ const executeDisconnectTests = (factory) => {
                 }).then(() => {
                     // we can't dispose the token as this will locally unsubscribe so we trigger
                     // the unsubscription command manually
-                    internalChannel.publish("subscribe_disconnect", id2).then(() => {
-                        internalChannel.publish("unsubscribe_disconnect", id2).then(() => {
-                            // TODO limitation: we don't get realy notification when the messages are sent
-                            // to the server; they are fire-and-forget
-                            setTimeout(() => {
-                                pubsub2.stop();
-                                setTimeout(done, 500);
-                            }, 500);
-                        })
-                    })
-                })
+                    const afterSubscribeDisconnect = () => {
+                        const msg = { payload: id2, callback: () => {
+                            pubsub2.stop();
+                            setTimeout(done, 1000);
+                        }};
+                        internalChannel.publish("unsubscribe_disconnect", msg);
+                    }
+                    const internalMessage = { payload: id2, callback: afterSubscribeDisconnect };
+                    internalChannel.publish("subscribe_disconnect", internalMessage);
+                });
             });
         });
 
@@ -104,11 +104,12 @@ const executeDisconnectTests = (factory) => {
                         expect(clientUuid).to.equal(id2);
                         done();
                     }).then(() => {
-                        internalChannel.publish("subscribe_disconnect", id2).then(() => {
+                        const internalMessage = { payload: id2, callback: () => {
                             pubsub2.stop();
-                        })
-                    })
-                })
+                        }};
+                        internalChannel.publish("subscribe_disconnect", internalMessage);
+                    });
+                });
             });
         });
 
@@ -125,13 +126,15 @@ const executeDisconnectTests = (factory) => {
                 internalChannel.subscribe("client_disconnected", (clientUuid) => {
                     done("Error: shouldnt receive a disconnect event");
                 }).then(() => {
-                    internalChannel.publish("subscribe_disconnect", id1).then(() => {
+                    // id1 because its a valid id, but didn't subscribe to it!
+                    const internalMessage = { payload: id1, callback: () => {
                         pubsub2.stop();
                         setTimeout(done, 1000);
-                    })
-                })
+                    }}
+                    internalChannel.publish("subscribe_disconnect", internalMessage);
+                });
             });
-        })
+        });
     });
 }
 
