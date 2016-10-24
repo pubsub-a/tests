@@ -140,7 +140,7 @@ const executeDisconnectTests = (factory) => {
                     setTimeout(() => {
                         const msg2 = { payload: id2, callback: () => {
                             pubsub2.stop();
-                            setTimeout(done, 1000);
+                            setTimeout(done, 500);
                         }};
                         internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
                         internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
@@ -169,7 +169,7 @@ const executeDisconnectTests = (factory) => {
                         internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
                         internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
                         internalChannel.publish("unsubscribe_disconnect", msg2);
-                    }, 1000);
+                    }, 500);
                 });
             });
         });
