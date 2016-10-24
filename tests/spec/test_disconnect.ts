@@ -137,14 +137,16 @@ const executeDisconnectTests = (factory) => {
                     internalChannel.publish("subscribe_disconnect", msg);
                     internalChannel.publish("subscribe_disconnect", msg);
 
-                    const msg2 = { payload: id2, callback: () => {
-                        pubsub2.stop();
-                        setTimeout(done, 1000);
-                    }};
-                    internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
-                    internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
-                    internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
-                    internalChannel.publish("unsubscribe_disconnect", msg2);
+                    setTimeout(() => {
+                        const msg2 = { payload: id2, callback: () => {
+                            pubsub2.stop();
+                            setTimeout(done, 1000);
+                        }};
+                        internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
+                        internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
+                        internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
+                        internalChannel.publish("unsubscribe_disconnect", msg2);
+                    }, 1000);
                 });
             });
         });
@@ -163,9 +165,11 @@ const executeDisconnectTests = (factory) => {
                     const msg2 = { payload: id2, callback: () => {
                         pubsub2.stop();
                     }};
-                    internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
-                    internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
-                    internalChannel.publish("unsubscribe_disconnect", msg2);
+                    setTimeout(() => {
+                        internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
+                        internalChannel.publish("unsubscribe_disconnect", { payload: id2 });
+                        internalChannel.publish("unsubscribe_disconnect", msg2);
+                    }, 1000);
                 });
             });
         });
