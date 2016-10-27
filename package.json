@@ -30,7 +30,6 @@
     "test": "npm run build && npm run node-tests && npm run browser-tests"
   },
   "dependencies": {
-    "es6-promise": "^4.0.5",
-    "pubsub-a-interfaces": "git@bitbucket.org:pubsub-a/pubsub-a-interfaces.git"
+    "es6-promise": "^4.0.5"
   }
 }

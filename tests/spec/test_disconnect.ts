@@ -2,7 +2,14 @@
 if (typeof window === "undefined") {
     let c = require("chai");
     var expect = c.expect;
-    var InternalChannelTopic = require("pubsub-a-interfaces").InternalChannelTopic;
+}
+
+// HACK replicate the channel topics else we need to publish pubsub-a-interfaces as module for browser
+// and nodejs
+class InternalChannelTopic {
+    static CLIENT_DISCONNECT = "client_disconnect";
+    static SUBSCRIBE_DISCONNECT = "subscribe_disconnect";
+    static UNSUBSCRIBE_DISCONNECT = "unsubscribe_disconnect";
 }
 
 const executeDisconnectTests = (factory) => {
