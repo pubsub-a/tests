@@ -22,6 +22,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      'node_modules/pubsub-a-interfaces/dist/pubsub-a-interfaces.js',
       'node_modules/es6-promise/dist/es6-promise.auto.js',
       'node_modules/rxjs/bundles/Rx.js',
       'tests/test_harness.js',
