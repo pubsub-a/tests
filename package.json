@@ -25,7 +25,7 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "node-tests": "mocha tests/test.js",
+    "node-tests": "mocha --timeout 5000 tests/test.js",
     "browser-tests": "karma start",
     "test": "npm run build && npm run node-tests && npm run browser-tests"
   },
