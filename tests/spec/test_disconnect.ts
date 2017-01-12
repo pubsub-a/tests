@@ -21,6 +21,7 @@ const executeDisconnectTests = (factory) => {
     describe(`[${factory.name}] should pass disconnect event tests`, function() {
         // PubSubMicro has no disconnect logic
         if (factory.name == "PubSubMicro") {
+            console.info("NOT EXECUTING TESTS: PubSubMicro does not support disconnect logic yet");
             return;
         }
 
@@ -36,7 +37,7 @@ const executeDisconnectTests = (factory) => {
                 });
             });
 
-            const channel2_ready  = pubsub2.start(pubsub => {
+            const channel2_ready = pubsub2.start(pubsub => {
                 id2 = pubsub2.clientId;
                 return pubsub2.channel(channel_name).then((chan) => {
                     channel2 = chan;
