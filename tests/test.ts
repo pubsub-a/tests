@@ -15,13 +15,13 @@ if (typeof window === "undefined") {
         console.log('Could not load pubsub-micro tests: ' + err);
     }
 
-    // try {
-    //     // pubsub-server-a-node
-    //     var factory = require("../../pubsub-a-server-node/tests/spec-validation.js");
-    //     registerPubSubImplementationFactory(factory);
-    // } catch(err) {
-    //     console.log('Could not load pubsub-server-node tests: ' + err);
-    // }
+    try {
+         // pubsub-server-a-node
+         var factory = require("../../pubsub-a-server-node/tests/spec-validation.js");
+         registerPubSubImplementationFactory(factory);
+    } catch(err) {
+         console.log('Could not load pubsub-server-node tests: ' + err);
+    }
 
 } else {
     // instead of require() the test cases, add them in the karma.conf.js file and expose as global variable
@@ -69,6 +69,7 @@ function runTests() {
             executeHighLoadTests = win.executeHighLoadTests;
         }
 
+/*
         require("es6-promise").polyfill();
 
         const getRandomInt = (min: number, max: number) => {
@@ -82,6 +83,7 @@ function runTests() {
             setTimeout(fn, 0);
         };
         (Promise as any)._setScheduler(delayScheduler);
+*/
 
         executeStartStopTests(factory);
         executeCommonBasicPubSubTests(factory);
