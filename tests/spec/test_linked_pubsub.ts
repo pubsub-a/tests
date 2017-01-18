@@ -26,6 +26,13 @@ const executeLinkedPubSubTests = (factory) => {
                     channel1_ready.complete();
                 });
             });
+
+            // HACK TODO see trello ticket https://trello.com/c/jhOLCZpy
+            // For PubSubMicro we need to reset isStarted
+            if (pubsub2.constructor.name == "PubSubMicroValidated") {
+                pubsub2.isStarted = false;
+            }
+
             pubsub2.start(pubsub => {
                 pubsub2.channel(channel_name, (chan) => {
                     channel2 = chan;

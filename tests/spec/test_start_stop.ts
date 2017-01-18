@@ -14,16 +14,20 @@ const executeStartStopTests = (factory) => {
         let pubsub;
         let topic;
         let channel_name;
-        let channel;
+
+        let start_and_create_channel = () => {
+            return pubsub.start().then(() => {
+                return pubsub.channel(channel_name);
+            });
+        };
 
         beforeEach(() => {
             pubsub = factory.getPubSubImplementation();
             topic = randomValidChannelOrTopicName();
             channel_name = randomValidChannelOrTopicName();
-            return pubsub.start().then(() => pubsub.channel(channel_name).then(chan => channel = chan))
         });
 
-        it("should pass the same pubsub instance as returned in the promise in the callback function", () => {
+        it("should pass the same pubsub instance as returned in the promise as well as in the callback function", () => {
             let cb_pubsub;
             let promise = pubsub.start((instance, error) => {
                 cb_pubsub = instance;
@@ -77,6 +81,25 @@ const executeStartStopTests = (factory) => {
             })
         })
 
+        it("should set isStarted from true to false after the instance is started", done => {
+            expect(pubsub.isStarted).to.equal(false);
+            return pubsub.start(() => {
+                expect(pubsub.isStarted).to.equal(true);
+                done();
+            })
+        })
+
+        it("should throw an exception when trying to start an already started instance", done => {
+            pubsub.start().then(() => {
+                try {
+                    pubsub.start();
+                    done("Second call to .start() did not throw an error");
+                } catch (err) {
+                    done();
+                }
+            })
+        })
+
         it("should throw an error if calling start() again after the stop() function", () => {
             return pubsub.start()
                 .then(() => pubsub.stop())
@@ -110,43 +133,53 @@ const executeStartStopTests = (factory) => {
         })
 
         it("should reject the promise when calling publish after the .stop function has been called", () => {
-            return pubsub.stop()
-                .then(() => channel.publish(topic, "foo"))
-                .should.eventually.be.rejected
-                .and.be.an.instanceOf(Error);
+            return start_and_create_channel().then(channel => {
+                return pubsub.stop()
+                    .then(() => channel.publish(topic, "foo"))
+                    .should.eventually.be.rejected
+                    .and.be.an.instanceOf(Error);
+            })
         });
 
         it("should set the error object in the callback when calling publish after the .stop function has been called", done => {
-            pubsub.stop().then(() => {
-                channel.publish(topic, "empty", error => {
-                    expect(error).to.be.defined;
-                    expect(error).to.be.an.instanceOf(Error);
-                    done();
+            start_and_create_channel().then(channel => {
+                return pubsub.stop().then(() => {
+                    channel.publish(topic, "empty", error => {
+                        expect(error).to.be.defined;
+                        expect(error).to.be.an.instanceOf(Error);
+                        done();
+                    });
                 });
             });
         });
 
         it("should reject the promise when calling subscribe after the .stop function has been called", () => {
-            return pubsub.stop()
-                .then(() => channel.subscribe(topic, () => void 0))
-                .should.eventually.be.rejected
-                .and.be.an.instanceOf(Error);
+            return start_and_create_channel().then(channel => {
+                return pubsub.stop()
+                    .then(() => channel.subscribe(topic, () => void 0))
+                    .should.eventually.be.rejected
+                    .and.be.an.instanceOf(Error);
+            });
         });
 
         it("should set the error object in the callback when calling subscribe after the .stop function has been called", done => {
-            pubsub.stop().then(() => {
-                channel.subscribe(topic, () => void 0, (token, topic, error) => {
-                    expect(error).to.be.defined;
-                    expect(error).to.be.an.instanceOf(Error);
-                    done();
+            start_and_create_channel().then(channel => {
+                pubsub.stop().then(() => {
+                    channel.subscribe(topic, () => void 0, (token, topic, error) => {
+                        expect(error).to.be.defined;
+                        expect(error).to.be.an.instanceOf(Error);
+                        done();
+                    });
                 });
             });
         });
 
         it("should reject the promise when creating a channel if the .stop function has been called", () => {
-            return pubsub.stop().then(() => pubsub.channel(topic, () => void 0))
-            .should.eventually.be.rejected
-            .and.be.an.instanceOf(Error);
+            return start_and_create_channel().then(channel => {
+                return pubsub.stop().then(() => pubsub.channel(topic, () => void 0))
+                .should.eventually.be.rejected
+                .and.be.an.instanceOf(Error);
+            });
         });
     });
 }
