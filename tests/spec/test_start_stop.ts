@@ -83,7 +83,7 @@ const executeStartStopTests = (factory) => {
 
         it("should set isStarted from true to false after the instance is started", done => {
             expect(pubsub.isStarted).to.equal(false);
-            return pubsub.start(() => {
+            pubsub.start(() => {
                 expect(pubsub.isStarted).to.equal(true);
                 done();
             })
