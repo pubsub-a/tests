@@ -12,65 +12,55 @@ const executeChannelTests = (factory) => {
 
         beforeEach(done => {
             pubsub = factory.getPubSubImplementation();
-            pubsub.start(function() {
-                done();
-            });
+            pubsub.start(() => done());
         });
 
-        function expectToBeAChannel(channel) {
+        let expectToBeAChannel = (channel) => {
             expect(channel.publish).to.be.a('function');
             expect(channel.subscribe).to.be.a('function');
             expect(channel.name).to.be.a('string');
             expect(channel.name).length.to.be.above(0);
         }
 
-        it("should create a channel asynchronously", function(done) {
-            let channel;
-
-            pubsub.channel("foo", function(chan) {
+        it("should create a channel asynchronously", done => {
+            pubsub.channel("foo", chan => {
                 expectToBeAChannel(chan);
                 done();
             });
         });
 
-        it("should create a channel synchronously and return a promise", function() {
-            let channel;
-
-            let promise = pubsub.channel("foo");
+        it("should create a channel synchronously and return a promise", () => {
+            const promise = pubsub.channel("foo");
             expect(promise).to.be.ok;
             expect(promise.then).to.be.a("function");
             expect(promise.catch).to.be.a("function");
 
         });
 
-        it("if the .channel() returns a promise, it should resolve with the channel", function(done) {
-            let channel;
-
-            let promise = pubsub.channel("foo");
-
-            promise.then(function(channel) {
+        it("if the .channel() returns a promise, it should resolve with the channel", done => {
+            const promise = pubsub.channel("foo");
+            promise.then(channel => {
                 expectToBeAChannel(channel);
                 done();
             });
-
         });
 
-        it("should not share pubsub data between two channels of different name", function(done) {
+        it("should not share pubsub data between two channels of different name", done => {
             let channel1, channel2;
-            let channel1_ready = new Rx.AsyncSubject();
-            let channel2_ready = new Rx.AsyncSubject();
+            const channel1_ready = new Rx.AsyncSubject();
+            const channel2_ready = new Rx.AsyncSubject();
 
             // TODO use Promise/rxjs magic to start
-            pubsub.channel("channel1", function(chan) {
+            pubsub.channel("channel1", chan => {
                 channel1 = chan;
                 channel1_ready.complete();
             });
-            pubsub.channel("channel2", function(chan) {
+            pubsub.channel("channel2", chan => {
                 channel2 = chan;
                 channel2_ready.complete();
             });
 
-            Rx.Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, function() {
+            Rx.Observable.zip(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
 
                 const p1 = channel1.subscribe("foo", () => {
                     expect(true).to.be.true;
@@ -86,7 +76,7 @@ const executeChannelTests = (factory) => {
             });
         });
 
-        it("should have two channel instances with same name share the pubsub data", function(done) {
+        it("should have two channel instances with same name share the pubsub data", done => {
             let channel1, channel2;
             let channel1_ready = new Rx.AsyncSubject();
             let channel2_ready = new Rx.AsyncSubject();
@@ -101,14 +91,12 @@ const executeChannelTests = (factory) => {
             });
 
             Rx.Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
-
-                channel1.subscribe("bar", function() {
+                channel1.subscribe("bar", () => {
                     expect(true).to.be.true;
                     done();
                 }).then(() => {
                     channel2.publish("bar", {})
                 });
-
             });
         });
     });
