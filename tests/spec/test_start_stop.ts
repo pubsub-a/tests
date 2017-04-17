@@ -45,7 +45,7 @@ const executeStartStopTests = (factory) => {
             });
         });
 
-        it("should set a clientId after start() is done via promise", function(done) {
+        it("should set a clientId after start() is done via promise", function (done) {
             if (factory.name == "PubSubMicro") {
                 this.skip();
                 return;
@@ -64,7 +64,7 @@ const executeStartStopTests = (factory) => {
                 });
         })
 
-        it("should set a clientId after start() is done via callback", function(done) {
+        it("should set a clientId after start() is done via callback", function (done) {
             if (factory.name == "PubSubMicro") {
                 this.skip();
                 return;
@@ -119,11 +119,12 @@ const executeStartStopTests = (factory) => {
 
         it("should trigger the stop callback after the pubsub was stopped", done => {
             pubsub.start()
-                .then(() => { pubsub.stop(() => {
-                    expect(true).to.be.ok;
-                    done();
+                .then(() => {
+                    pubsub.stop(() => {
+                        expect(true).to.be.ok;
+                        done();
+                    })
                 })
-            })
         })
 
         it("should resolve the promise after the pubsub was stopped", () => {
@@ -148,7 +149,10 @@ const executeStartStopTests = (factory) => {
                         expect(error).to.be.defined;
                         expect(error).to.be.an.instanceOf(Error);
                         done();
-                    });
+                    })
+                    // TODO node warns about unhandled rejected promises, but we have a double API - handling the error
+                    // in a callback seems right, but node still complains?
+                    // .catch(() => void 0);
                 });
             });
         });
@@ -170,6 +174,9 @@ const executeStartStopTests = (factory) => {
                         expect(error).to.be.an.instanceOf(Error);
                         done();
                     });
+                    // TODO node warns about unhandled rejected promises, but we have a double API - handling the error
+                    // in a callback seems right, but node still complains?
+                    // }).catch(() => void 0)
                 });
             });
         });
@@ -177,8 +184,8 @@ const executeStartStopTests = (factory) => {
         it("should reject the promise when creating a channel if the .stop function has been called", () => {
             return start_and_create_channel().then(channel => {
                 return pubsub.stop().then(() => pubsub.channel(topic, () => void 0))
-                .should.eventually.be.rejected
-                .and.be.an.instanceOf(Error);
+                    .should.eventually.be.rejected
+                    .and.be.an.instanceOf(Error);
             });
         });
     });
