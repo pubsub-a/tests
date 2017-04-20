@@ -20,15 +20,15 @@ const executeLinkedPubSubTests = (factory) => {
 
             let channel_name = "channel";
 
-            pubsub1.start(pubsub => {
-                pubsub1.channel(channel_name, (chan) => {
+            pubsub1.start().then(() => {
+                pubsub1.channel(channel_name).then(chan => {
                     channel1 = chan;
                     channel1_ready.complete();
                 });
             });
 
-            pubsub2.start(pubsub => {
-                pubsub2.channel(channel_name, (chan) => {
+            pubsub2.start().then(() => {
+                pubsub2.channel(channel_name).then(chan => {
                     channel2 = chan;
                     channel2_ready.complete();
                 });
@@ -36,18 +36,6 @@ const executeLinkedPubSubTests = (factory) => {
 
             Rx.Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
                 done();
-            });
-        });
-
-        it("should receive a simple publish across linked instances using Callback", done => {
-            let topic = randomValidChannelOrTopicName();
-            let payload = "foobar";
-
-            channel1.subscribe(topic, p => {
-                expect(p).to.equal(payload);
-                done();
-            }, () => {
-                channel2.publish(topic, "foobar");
             });
         });
 
@@ -71,7 +59,7 @@ const executeLinkedPubSubTests = (factory) => {
             channel1.subscribe(topic, p => {
                 expect(p).to.equal(payload);
                 done();
-            }, () => {
+            }).then(() => {
                 channel1.publish(topic, payload);
             });
         });
@@ -91,7 +79,7 @@ const executeLinkedPubSubTests = (factory) => {
             channel1.subscribe(topic, p => {
                 expect(p).not.to.equal(payload);
                 done();
-            }, () => {
+            }).then(() => {
                 channel1.publish(topic, payload);
             });
         });

@@ -12,7 +12,7 @@ const executeChannelTests = (factory) => {
 
         beforeEach(done => {
             pubsub = factory.getPubSubImplementation();
-            pubsub.start(() => done());
+            pubsub.start().then(() => done());
         });
 
         let expectToBeAChannel = (channel) => {
@@ -23,7 +23,7 @@ const executeChannelTests = (factory) => {
         }
 
         it("should create a channel asynchronously", done => {
-            pubsub.channel("foo", chan => {
+            pubsub.channel("foo").then(chan => {
                 expectToBeAChannel(chan);
                 done();
             });
@@ -46,22 +46,12 @@ const executeChannelTests = (factory) => {
         });
 
         it("should not share pubsub data between two channels of different name", done => {
-            let channel1, channel2;
-            const channel1_ready = new Rx.AsyncSubject();
-            const channel2_ready = new Rx.AsyncSubject();
 
-            // TODO use Promise/rxjs magic to start
-            pubsub.channel("channel1", chan => {
-                channel1 = chan;
-                channel1_ready.complete();
-            });
-            pubsub.channel("channel2", chan => {
-                channel2 = chan;
-                channel2_ready.complete();
-            });
+            const c1 = Rx.Observable.fromPromise(pubsub.channel("channel1"));
+            const c2 = Rx.Observable.fromPromise(pubsub.channel("channel2"));
 
-            Rx.Observable.zip(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
-
+            Rx.Observable.zip(c1, c2).subscribe(([channel1, channel2]) => {
+                
                 const p1 = channel1.subscribe("foo", () => {
                     expect(true).to.be.true;
                     done();
@@ -70,9 +60,13 @@ const executeChannelTests = (factory) => {
                 // if this is called, data is shared amgonst differently named channels so we fail
                 const p2 = channel2.subscribe("foo", () => {
                     expect(false).to.be.true;
+                    done("FAILED");
                 });
 
-                Promise.all([p1, p2]).then(() => channel1.publish("foo", {}));
+
+                Promise.all([p1, p2]).then(() => {
+                    channel1.publish("foo", {});
+                });
             });
         });
 
@@ -81,11 +75,11 @@ const executeChannelTests = (factory) => {
             let channel1_ready = new Rx.AsyncSubject();
             let channel2_ready = new Rx.AsyncSubject();
 
-            pubsub.channel("foo", chan => {
+            pubsub.channel("foo").then(chan => {
                 channel1 = chan;
                 channel1_ready.complete();
             });
-            pubsub.channel("foo", chan => {
+            pubsub.channel("foo").then(chan => {
                 channel2 = chan;
                 channel2_ready.complete();
             });

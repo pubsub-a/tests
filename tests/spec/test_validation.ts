@@ -15,9 +15,7 @@ var executeValidationTests = (factory) => {
 
         beforeEach(done => {
             pubsub = factory.getPubSubImplementation();
-            pubsub.start(() => {
-                done();
-            });
+            pubsub.start().then(() => done());
         });
 
         it("should make sure a channel name can only be of type string", () => {
@@ -74,8 +72,8 @@ var executeValidationTests = (factory) => {
         beforeEach(done => {
             pubsub = factory.getPubSubImplementation();
             let randomChannelName = randomValidChannelOrTopicName();
-            pubsub.start(() => {
-                pubsub.channel(randomChannelName, (chan) => {
+            pubsub.start().then(() => {
+                pubsub.channel(randomChannelName).then((chan) => {
                     channel = chan;
                     done();
                 });

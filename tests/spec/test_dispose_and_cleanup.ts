@@ -17,8 +17,8 @@ const executeDisposeAndCleanupTests = (factory) => {
             pubsub = factory.getPubSubImplementation();
             topic = randomValidChannelOrTopicName();
             let channel_name = randomValidChannelOrTopicName();
-            pubsub.start(() => {
-                pubsub.channel(channel_name, (chan) => {
+            pubsub.start().then(() => {
+                pubsub.channel(channel_name).then(chan => {
                     channel = chan;
                     done();
                 });
@@ -38,7 +38,7 @@ const executeDisposeAndCleanupTests = (factory) => {
 
         it("should call the dispose callback with the subscription count when disposing", done => {
             channel.subscribe(topic, () => void 0).then(token => {
-                token.dispose(count => {
+                token.dispose().then(count => {
                     expect(count).to.equal(0);
                     done();
                 });
@@ -71,14 +71,14 @@ const executeDisposeAndCleanupTests = (factory) => {
         it('should not dispose all identical subscriptions if a single one is disposed', (done) => {
             const channel_name = randomValidChannelOrTopicName();
 
-            pubsub.channel(channel_name, (chan) => {
+            pubsub.channel(channel_name).then(chan => {
 
                 const p1 = chan.subscribe('topic', (payload) => {
                     expect(payload).to.be.ok;
                     done();
                 });
 
-                const p2 = chan.subscribe('topic', () => void 0, (subscription) => {
+                const p2 = chan.subscribe('topic', () => void 0).then((subscription) => {
                     subscription.dispose().then(() => {
                         Promise.all([p1, p2]).then(() => chan.publish('topic', true));
                     })
@@ -125,7 +125,7 @@ const executeDisposeAndCleanupTests = (factory) => {
                 // this test not to fail so use this sideeffect for it
                 throw_exception = () => new Error("Observer func was called");
             }).then(subscription => {
-                subscription.dispose(callback);
+                subscription.dispose().then(callback);
             });
 
         });

@@ -27,24 +27,6 @@ const executeStartStopTests = (factory) => {
             channel_name = randomValidChannelOrTopicName();
         });
 
-        it("should pass the same pubsub instance as returned in the promise as well as in the callback function", () => {
-            let cb_pubsub;
-            let promise = pubsub.start((instance, error) => {
-                cb_pubsub = instance;
-            });
-
-            return promise.then(pubsub => {
-                expect(pubsub).to.equal(cb_pubsub);
-            });
-        });
-
-        it("set an undefined error object in callback if no error occurs", done => {
-            pubsub.start((instance, error) => {
-                expect(error).to.be.undefined;
-                done();
-            });
-        });
-
         it("should set a clientId after start() is done via promise", function (done) {
             if (factory.name == "PubSubMicro") {
                 this.skip();
@@ -52,6 +34,7 @@ const executeStartStopTests = (factory) => {
             }
 
             pubsub.start()
+            .catch(v => console.log(v))
                 .then(() => {
                     try {
                         expect(pubsub.clientId).to.be.defined;
@@ -64,26 +47,9 @@ const executeStartStopTests = (factory) => {
                 });
         })
 
-        it("should set a clientId after start() is done via callback", function (done) {
-            if (factory.name == "PubSubMicro") {
-                this.skip();
-                return;
-            }
-            pubsub.start(() => {
-                try {
-                    expect(pubsub.clientId).to.be.defined;
-                    expect(pubsub.clientId).to.be.a("string");
-                    expect(pubsub.clientId.length).to.be.greaterThan(4);
-                    done();
-                } catch (err) {
-                    done(err);
-                }
-            })
-        })
-
         it("should set isStarted from true to false after the instance is started", done => {
             expect(pubsub.isStarted).to.equal(false);
-            pubsub.start(() => {
+            pubsub.start().then(() => {
                 expect(pubsub.isStarted).to.equal(true);
                 done();
             })
@@ -117,16 +83,6 @@ const executeStartStopTests = (factory) => {
             });
         });
 
-        it("should trigger the stop callback after the pubsub was stopped", done => {
-            pubsub.start()
-                .then(() => {
-                    pubsub.stop(() => {
-                        expect(true).to.be.ok;
-                        done();
-                    })
-                })
-        })
-
         it("should resolve the promise after the pubsub was stopped", () => {
             return pubsub.start()
                 .then(() => pubsub.stop())
@@ -142,42 +98,12 @@ const executeStartStopTests = (factory) => {
             })
         });
 
-        it("should set the error object in the callback when calling publish after the .stop function has been called", done => {
-            start_and_create_channel().then(channel => {
-                return pubsub.stop().then(() => {
-                    channel.publish(topic, "empty", error => {
-                        expect(error).to.be.defined;
-                        expect(error).to.be.an.instanceOf(Error);
-                        done();
-                    })
-                    // TODO node warns about unhandled rejected promises, but we have a double API - handling the error
-                    // in a callback seems right, but node still complains?
-                    // .catch(() => void 0);
-                });
-            });
-        });
-
         it("should reject the promise when calling subscribe after the .stop function has been called", () => {
             return start_and_create_channel().then(channel => {
                 return pubsub.stop()
                     .then(() => channel.subscribe(topic, () => void 0))
                     .should.eventually.be.rejected
                     .and.be.an.instanceOf(Error);
-            });
-        });
-
-        it("should set the error object in the callback when calling subscribe after the .stop function has been called", done => {
-            start_and_create_channel().then(channel => {
-                pubsub.stop().then(() => {
-                    channel.subscribe(topic, () => void 0, (token, topic, error) => {
-                        expect(error).to.be.defined;
-                        expect(error).to.be.an.instanceOf(Error);
-                        done();
-                    });
-                    // TODO node warns about unhandled rejected promises, but we have a double API - handling the error
-                    // in a callback seems right, but node still complains?
-                    // }).catch(() => void 0)
-                });
             });
         });
 

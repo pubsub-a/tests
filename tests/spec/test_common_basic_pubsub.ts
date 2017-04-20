@@ -16,9 +16,9 @@ const executeCommonBasicPubSubTests = (factory) => {
         beforeEach(done => {
             // increase the timeout
             pubsub = factory.getPubSubImplementation();
-            pubsub.start(() => {
+            pubsub.start().then(() => {
                 let random = randomValidChannelOrTopicName();
-                pubsub.channel(random, (chan) => {
+                pubsub.channel(random).then(chan => {
                     channel = chan;
                     done();
                 });
@@ -177,28 +177,6 @@ const executeCommonBasicPubSubTests = (factory) => {
             });
         });
 
-        it("should call the subscription registered callback for .subscribe() with the correct arguments", (done) => {
-            const topic = randomValidChannelOrTopicName();
-            const observer = () => void 0;
-            channel.subscribe(topic, observer, (subscription, subscribedTopic) => {
-                expect(subscription).to.be.ok;
-                expect(subscription.dispose).to.be.ok;
-                expect(subscribedTopic).to.equal(topic);
-                done();
-            });
-        });
-
-        it("should call the subscription registered callback for .once() with the correct arguments", (done) => {
-            const topic = randomValidChannelOrTopicName();
-            const observer = () => void 0;
-            channel.once(topic, observer, (subscription, subscribedTopic) => {
-                expect(subscription).to.be.ok;
-                expect(subscription.dispose).to.be.ok;
-                expect(subscribedTopic).to.equal(topic);
-                done();
-            });
-        });
-
         it("should make sure unhandled exceptions in an observer function won't throw an error in the pubsub implementation", done => {
             const topic = randomValidChannelOrTopicName();
             const observer = () => {
@@ -214,14 +192,6 @@ const executeCommonBasicPubSubTests = (factory) => {
                     expect(false).to.be.ok;
                     done();
                 }
-            });
-        });
-
-        it("should make sure publish() triggers the callback", done => {
-            const topic = randomValidChannelOrTopicName();
-            channel.publish(topic, "foobar", () => {
-                expect(true).to.be.ok;
-                done();
             });
         });
 
