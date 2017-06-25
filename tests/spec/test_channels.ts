@@ -29,6 +29,13 @@ const executeChannelTests = (factory) => {
             });
         });
 
+        it("should make sure a channel has a reference to the pubsub instance it was used to create", done => {
+            pubsub.channel("foo").then(chan => {
+                expect(chan.pubsub).to.equal(pubsub);
+                done();
+            })
+        })
+
         it("should create a channel synchronously and return a promise", () => {
             const promise = pubsub.channel("foo");
             expect(promise).to.be.ok;
@@ -51,7 +58,7 @@ const executeChannelTests = (factory) => {
             const c2 = Rx.Observable.fromPromise(pubsub.channel("channel2"));
 
             Rx.Observable.zip(c1, c2).subscribe(([channel1, channel2]) => {
-                
+
                 const p1 = channel1.subscribe("foo", () => {
                     expect(true).to.be.true;
                     done();
