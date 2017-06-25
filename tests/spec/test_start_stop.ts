@@ -34,7 +34,7 @@ const executeStartStopTests = (factory) => {
             }
 
             pubsub.start()
-            .catch(v => console.log(v))
+                .catch(v => console.log(v))
                 .then(() => {
                     try {
                         expect(pubsub.clientId).to.be.defined;
@@ -53,6 +53,19 @@ const executeStartStopTests = (factory) => {
                 expect(pubsub.isStarted).to.equal(true);
                 done();
             })
+        })
+
+        it("should resolve the onStart promise after the start method is complete", done => {
+            pubsub.onStart.then(done);
+            pubsub.start();
+        })
+
+        it("should set the onStart promise after the creation of the pubsub constructor is done", () => {
+            expect(pubsub.onStart).to.be.ok;
+        })
+
+        it("should set the onStop promise after the creation of the pubsub constructor is done", () => {
+            expect(pubsub.onStop).to.be.ok;
         })
 
         it("should throw an exception when trying to start an already started instance", done => {
@@ -82,6 +95,11 @@ const executeStartStopTests = (factory) => {
                 ]).should.eventually.be.fulfilled;
             });
         });
+
+        it("should resolve the onStop promise after the stop method is complete", done => {
+            pubsub.onStop.then(done);
+            pubsub.start().then(() => pubsub.stop());
+        })
 
         it("should resolve the promise after the pubsub was stopped", () => {
             return pubsub.start()
