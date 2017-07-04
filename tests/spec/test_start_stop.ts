@@ -97,7 +97,7 @@ const executeStartStopTests = (factory) => {
         });
 
         it("should resolve the onStop promise after the stop method is complete", done => {
-            pubsub.onStop.then(done);
+            pubsub.onStop.then(() => done());
             pubsub.start().then(() => pubsub.stop());
         })
 
