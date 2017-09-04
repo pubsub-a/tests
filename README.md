@@ -12,4 +12,4 @@ and register a factory that returns your PubSubImplemenation and start Karma. Fo
 Licensing
 ---------
 
-This project test code is licensed under the GNU AGPL v3.
+This project test code is proprietary, all rights reserved.
