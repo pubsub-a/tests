@@ -1,6 +1,5 @@
 {
   "name": "@dynalon/pubsub-a-tests",
-  "private": true,
   "version": "0.2.0",
   "description": "PubSub/A spec test suite",
   "license": "UNLICENSED",
