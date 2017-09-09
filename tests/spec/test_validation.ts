@@ -1,14 +1,10 @@
-if (typeof window === "undefined") {
-    var c = require('chai');
-    let chaiAsPromised = require("chai-as-promised");
-    c.use(chaiAsPromised);
-    c.should();
-    var expect = c.expect;
-    var Rx = require('rxjs/Rx');
-    var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
-}
+import { expect } from "chai";
+import { Observable } from "rxjs/Rx";
 
-var executeValidationTests = (factory) => {
+import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+
+export const executeValidationTests = (factory: ImplementationFactory) => {
     let pubsub;
 
     describe(`[${factory.name} Channel name tests`, () => {
@@ -32,7 +28,7 @@ var executeValidationTests = (factory) => {
                 pubsub.channel(channel_name);
             };
 
-            Rx.Observable.range(1, 63).subscribe(length => {
+            Observable.range(1, 63).subscribe(length => {
                 expect(() => channel_generation(length)).not.to.throw();
             }, undefined, done);
         });
@@ -105,7 +101,7 @@ var executeValidationTests = (factory) => {
                 channel.subscribe(topic_name, () => void 0);
             };
 
-            Rx.Observable.range(1, 255).subscribe(length => {
+            Observable.range(1, 255).subscribe(length => {
                 expect(() => topic_generation_publish(length)).not.to.throw();
                 expect(() => topic_generation_subscribe(length)).not.to.throw();
             }, undefined, done);
@@ -162,12 +158,5 @@ var executeValidationTests = (factory) => {
             }).to.throw().and.be.an.instanceOf(Error);
             done();
         });
-
     });
 };
-
-if (typeof window === "undefined") {
-    module.exports = {
-        executeValidationTests: executeValidationTests
-    };
-}

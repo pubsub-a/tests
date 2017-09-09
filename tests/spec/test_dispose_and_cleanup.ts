@@ -1,11 +1,10 @@
-if (typeof window === "undefined") {
-    let c = require('chai');
-    var expect = c.expect;
-    var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
-    var Rx = require('rxjs/Rx');
-}
+import { expect } from "chai";
+import { Observable } from "rxjs/Rx";
 
-const executeDisposeAndCleanupTests = (factory) => {
+import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+
+export const executeDisposeAndCleanupTests = (factory: ImplementationFactory) => {
 
     describe(`['${factory.name}] should pass dispose and cleanup tests`, function (){
         let pubsub;
@@ -28,8 +27,8 @@ const executeDisposeAndCleanupTests = (factory) => {
         it("should make sure the dispose function returns a promise that resolves with a count", () => {
             return channel.subscribe(topic, () => void 0).then(token => {
                 const dispose_promise = token.dispose();
-                expect(dispose_promise).to.be.defined;
-                expect(dispose_promise.then).to.be.defined;
+                expect(dispose_promise).to.be.ok;
+                expect(dispose_promise.then).to.be.ok;
                 return dispose_promise.then(subscription_count => {
                     expect(subscription_count).to.equal(0);
                 });
@@ -130,10 +129,4 @@ const executeDisposeAndCleanupTests = (factory) => {
 
         });
     });
-}
-
-if (typeof window === "undefined") {
-    module.exports = {
-        executeDisposeAndCleanupTests: executeDisposeAndCleanupTests
-    };
 }

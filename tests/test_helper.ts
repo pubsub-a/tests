@@ -1,29 +1,22 @@
-var randomString = function(length: number) {
-  length = length || 8;
-  var text = '';
-  var allowedCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+export const randomString = function (length: number) {
+    length = length || 8;
+    let text = '';
+    const allowedCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  for(var i=0; i < length; i++)
-    text += allowedCharacters.charAt(Math.floor(Math.random() * allowedCharacters.length));
+    for (let i = 0; i < length; i++)
+        text += allowedCharacters.charAt(Math.floor(Math.random() * allowedCharacters.length));
 
-  return text;
+    return text;
 };
 
-var randomValidChannelOrTopicName = <any>function(length) {
-  if(!length)
-    length = Math.ceil(Math.random() * 63);
-  var text = '';
-  var allowedCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:_/-';
+export const randomValidChannelOrTopicName = function (length?: number) {
+    if (!length)
+        length = Math.ceil(Math.random() * 63);
+    let text = '';
+    const allowedCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:_/-';
 
-  for(var i=0; i < length; i++)
-    text += allowedCharacters.charAt(Math.floor(Math.random() * allowedCharacters.length));
+    for (let i = 0; i < length; i++)
+        text += allowedCharacters.charAt(Math.floor(Math.random() * allowedCharacters.length));
 
-  return text;
+    return text;
 };
-
-if (typeof window === "undefined") {
-    module.exports = {
-        randomString: randomString,
-        randomValidChannelOrTopicName: randomValidChannelOrTopicName
-    };
-}

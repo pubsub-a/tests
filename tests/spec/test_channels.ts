@@ -1,12 +1,12 @@
+import { expect } from "chai";
+import { Observable, AsyncSubject } from "rxjs/Rx";
 
-if (typeof window === "undefined") {
-    let c = require("chai");
-    var expect = c.expect;
-    var Rx = require('rxjs/Rx');
-}
+import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 
-const executeChannelTests = (factory) => {
-    let pubsub;
+import { IPubSub, IChannel } from "@dynalon/pubsub-a-interfaces";
+
+export const executeChannelTests = (factory: ImplementationFactory) => {
+    let pubsub: IPubSub;
 
     describe(`[${factory.name}] should pass common channel tests`, () => {
 
@@ -15,7 +15,7 @@ const executeChannelTests = (factory) => {
             pubsub.start().then(() => done());
         });
 
-        let expectToBeAChannel = (channel) => {
+        let expectToBeAChannel = (channel: IChannel) => {
             expect(channel.publish).to.be.a('function');
             expect(channel.subscribe).to.be.a('function');
             expect(channel.name).to.be.a('string');
@@ -23,14 +23,14 @@ const executeChannelTests = (factory) => {
         }
 
         it("should create a channel asynchronously", done => {
-            pubsub.channel("foo").then(chan => {
+            pubsub.channel("foo").then((chan: IChannel) => {
                 expectToBeAChannel(chan);
                 done();
             });
         });
 
         it("should make sure a channel has a reference to the pubsub instance it was used to create", done => {
-            pubsub.channel("foo").then(chan => {
+            pubsub.channel("foo").then((chan: IChannel) => {
                 expect(chan.pubsub).to.equal(pubsub);
                 done();
             })
@@ -41,12 +41,11 @@ const executeChannelTests = (factory) => {
             expect(promise).to.be.ok;
             expect(promise.then).to.be.a("function");
             expect(promise.catch).to.be.a("function");
-
         });
 
         it("if the .channel() returns a promise, it should resolve with the channel", done => {
             const promise = pubsub.channel("foo");
-            promise.then(channel => {
+            promise.then((channel: IChannel) => {
                 expectToBeAChannel(channel);
                 done();
             });
@@ -54,10 +53,10 @@ const executeChannelTests = (factory) => {
 
         it("should not share pubsub data between two channels of different name", done => {
 
-            const c1 = Rx.Observable.fromPromise(pubsub.channel("channel1"));
-            const c2 = Rx.Observable.fromPromise(pubsub.channel("channel2"));
+            const c1 = Observable.fromPromise<IChannel>(pubsub.channel("channel1"));
+            const c2 = Observable.fromPromise<IChannel>(pubsub.channel("channel2"));
 
-            Rx.Observable.zip(c1, c2).subscribe(([channel1, channel2]) => {
+            Observable.zip(c1, c2).subscribe(([channel1, channel2]) => {
 
                 const p1 = channel1.subscribe("foo", () => {
                     expect(true).to.be.true;
@@ -79,8 +78,8 @@ const executeChannelTests = (factory) => {
 
         it("should have two channel instances with same name share the pubsub data", done => {
             let channel1, channel2;
-            let channel1_ready = new Rx.AsyncSubject();
-            let channel2_ready = new Rx.AsyncSubject();
+            let channel1_ready = new AsyncSubject();
+            let channel2_ready = new AsyncSubject();
 
             pubsub.channel("foo").then(chan => {
                 channel1 = chan;
@@ -91,7 +90,7 @@ const executeChannelTests = (factory) => {
                 channel2_ready.complete();
             });
 
-            Rx.Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
+            Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
                 channel1.subscribe("bar", () => {
                     expect(true).to.be.true;
                     done();
@@ -101,10 +100,4 @@ const executeChannelTests = (factory) => {
             });
         });
     });
-}
-
-if (typeof window === "undefined") {
-    module.exports = {
-        executeChannelTests: executeChannelTests
-    };
 }

@@ -1,11 +1,10 @@
-if (typeof window === "undefined") {
-    let c = require("chai");
-    var expect = c.expect;
-    var Rx = require('rxjs/Rx');
-    var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
-}
+import { expect } from "chai";
+import { Observable, AsyncSubject } from "rxjs/Rx";
 
-const executeLinkedPubSubTests = (factory) => {
+import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+
+export const executeLinkedPubSubTests = (factory: ImplementationFactory) => {
 
     let pubsub1, pubsub2;
     let channel1, channel2;
@@ -13,10 +12,10 @@ const executeLinkedPubSubTests = (factory) => {
     describe(`[${factory.name}] should pass basic linked pubsub tests`, () => {
 
         beforeEach(done => {
-            [ pubsub1, pubsub2 ] = factory.getLinkedPubSubImplementation(2);
+            [pubsub1, pubsub2] = factory.getLinkedPubSubImplementation(2);
 
-            let channel1_ready = new Rx.AsyncSubject();
-            let channel2_ready = new Rx.AsyncSubject();
+            let channel1_ready = new AsyncSubject();
+            let channel2_ready = new AsyncSubject();
 
             let channel_name = "channel";
 
@@ -34,7 +33,7 @@ const executeLinkedPubSubTests = (factory) => {
                 });
             });
 
-            Rx.Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
+            Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
                 done();
             });
         });
@@ -66,7 +65,7 @@ const executeLinkedPubSubTests = (factory) => {
 
         // TODO for optimization in the future this might change so that local subscribers don't get publishes via the network that they
         // published themselves
-        it("should fire local subscriptions via the network and not pass the same object reference to local subscribers", function(done) {
+        it("should fire local subscriptions via the network and not pass the same object reference to local subscribers", function (done) {
             if (factory.name == "PubSubMicro") {
                 this.skip();
                 return;
@@ -86,9 +85,3 @@ const executeLinkedPubSubTests = (factory) => {
 
     });
 };
-
-if (typeof window === "undefined") {
-    module.exports = {
-        executeLinkedPubSubTests: executeLinkedPubSubTests
-    };
-}

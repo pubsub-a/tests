@@ -1,7 +1,7 @@
 // Karma configuration
 // Generated on Sat Mar 21 2015 13:31:27 GMT+0100 (CET)
 
-module.exports = function(config) {
+module.exports = function (config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -10,12 +10,11 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha', 'chai-as-promised', 'chai'],
-   plugins: [ 'karma-mocha', 'karma-chai-as-promised', 'karma-chai', 'karma-firefox-launcher', 'karma-chrome-launcher', 'karma-phantomjs-launcher' ],
+    frameworks: ['mocha', 'chai'],
 
     client: {
       mocha: {
-        timeout: 5000
+        timeout: 10000
       }
     },
 
@@ -23,34 +22,14 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'node_modules/es6-promise/dist/es6-promise.auto.js',
-      'node_modules/rxjs/bundles/Rx.js',
-      'tests/test_harness.js',
-      'tests/test_helper.js',
-
-      'tests/spec/**/*.js',
-
-      // IMPLEMENTATION SPECIFIC PATHS - ADJUST TO YOUR PHYSICAL LOCATION
-
-      // Reference implementation - PubSub.Micro
-      '../pubsub-a-micro/dist/bundle/pubsub-a-micro.umd.js',
-      '../pubsub-a-micro/tests/spec-validation.js',
-
-      // node-server implementation via socket.io - Make sure the node-server runs before executing
-      // the tests!
-      '../pubsub-a-server-node/node_modules/socket.io-client/socket.io.js',
-      '../pubsub-a-server-node/dist/bundle/pubsub-a-node-client.umd.js',
-      '../pubsub-a-server-node/tests/spec-validation.js',
-
-
-      // START RUNNING THE TESTS
-      'tests/test.js',
-
+      'node_modules/chai-as-promised/lib/chai-as-promised.js',
+      'tests/bundle.js'
     ],
 
     // list of files to exclude
     exclude: [
       '**/*.min.js',
-      '**/*.swp'
+      '**/*.swp',
     ],
 
 
@@ -81,11 +60,12 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome', 'PhantomJS', 'Firefox'],
-
+    // browsers: ['Chrome', 'Firefox'],
+    browsers: ['ChromeHeadless'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: true
   });
 };
+

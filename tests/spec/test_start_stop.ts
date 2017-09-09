@@ -1,13 +1,10 @@
-if (typeof window === "undefined") {
-    var c = require('chai');
-    let chaiAsPromised = require("chai-as-promised");
-    c.use(chaiAsPromised);
-    c.should();
-    var expect = c.expect;
-    var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
-}
+import { expect } from "chai";
+import { Observable } from "rxjs/Rx";
 
-const executeStartStopTests = (factory) => {
+import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+
+export const executeStartStopTests = (factory: ImplementationFactory) => {
 
     describe(`['${factory.name}] should pass the start/stop implementation test`, () => {
 
@@ -37,7 +34,7 @@ const executeStartStopTests = (factory) => {
                 .catch(v => console.log(v))
                 .then(() => {
                     try {
-                        expect(pubsub.clientId).to.be.defined;
+                        expect(pubsub.clientId).to.be.ok;
                         expect(pubsub.clientId).to.be.a("string");
                         expect(pubsub.clientId.length).to.be.greaterThan(4);
                         done();
@@ -79,20 +76,20 @@ const executeStartStopTests = (factory) => {
             })
         })
 
-        it("should throw an error if calling start() again after the stop() function", () => {
-            return pubsub.start()
+        it("should throw an error if calling start() again after the stop() function", (done) => {
+            pubsub.start()
                 .then(() => pubsub.stop())
                 .then(() => pubsub.start())
-                .should.eventually.be.rejected;
+                .catch(() => done())
         });
 
-        it("should be allowed to call stop multiple times", () => {
-            return pubsub.start().then(() => {
+        it("should be allowed to call stop multiple times", (done) => {
+            pubsub.start().then(() => {
                 return Promise.all([
                     pubsub.stop(),
                     pubsub.stop(),
                     pubsub.stop(),
-                ]).should.eventually.be.fulfilled;
+                ]).then(() => done());
             });
         });
 
@@ -101,42 +98,42 @@ const executeStartStopTests = (factory) => {
             pubsub.start().then(() => pubsub.stop());
         })
 
-        it("should resolve the promise after the pubsub was stopped", () => {
-            return pubsub.start()
+        it("should resolve the promise after the pubsub was stopped", (done) => {
+            pubsub.start()
                 .then(() => pubsub.stop())
-                .should.eventually.be.fulfilled;
+                .then(() => done());
         })
 
-        it("should reject the promise when calling publish after the .stop function has been called", () => {
-            return start_and_create_channel().then(channel => {
-                return pubsub.stop()
+        it("should reject the promise when calling publish after the .stop function has been called", done => {
+            start_and_create_channel().then(channel => {
+                pubsub.stop()
                     .then(() => channel.publish(topic, "foo"))
-                    .should.eventually.be.rejected
-                    .and.be.an.instanceOf(Error);
+                    .catch(err => {
+                        expect(err).to.be.an.instanceOf(Error);
+                        done();
+                    })
             })
         });
 
-        it("should reject the promise when calling subscribe after the .stop function has been called", () => {
-            return start_and_create_channel().then(channel => {
-                return pubsub.stop()
+        it("should reject the promise when calling subscribe after the .stop function has been called", done => {
+            start_and_create_channel().then(channel => {
+                pubsub.stop()
                     .then(() => channel.subscribe(topic, () => void 0))
-                    .should.eventually.be.rejected
-                    .and.be.an.instanceOf(Error);
+                    .catch(err => {
+                        expect(err).to.be.an.instanceOf(Error);
+                        done();
+                    })
             });
         });
 
-        it("should reject the promise when creating a channel if the .stop function has been called", () => {
-            return start_and_create_channel().then(channel => {
-                return pubsub.stop().then(() => pubsub.channel(topic, () => void 0))
-                    .should.eventually.be.rejected
-                    .and.be.an.instanceOf(Error);
+        it("should reject the promise when creating a channel if the .stop function has been called", done => {
+            start_and_create_channel().then(channel => {
+                pubsub.stop().then(() => pubsub.channel(topic, () => void 0))
+                    .catch(err => {
+                        expect(err).to.be.an.instanceOf(Error);
+                        done();
+                    })
             });
         });
     });
-}
-
-if (typeof window === "undefined") {
-    module.exports = {
-        executeStartStopTests: executeStartStopTests
-    };
 }

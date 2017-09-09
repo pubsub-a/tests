@@ -1,12 +1,10 @@
-if (typeof window === "undefined") {
-    let c = require('chai');
-    var expect = c.expect;
-    var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
-    var Rx = require('rxjs/Rx');
-    randomString = require("../test_helper").randomString as (length: number) => string;
-}
+import { expect } from "chai";
+import { Observable, AsyncSubject, Subject } from "rxjs/Rx";
 
-const executeCommonBasicPubSubTests = (factory) => {
+import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+
+export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) => {
 
     describe(`['${factory.name}] should pass the common PubSub implementation tests `, () => {
 
@@ -40,8 +38,8 @@ const executeCommonBasicPubSubTests = (factory) => {
 
         it('should handle multiple subscriptions in parallel', (done) => {
             let count1 = 0, count2 = 0;
-            let promise1 = new Rx.AsyncSubject();
-            let promise2 = new Rx.AsyncSubject();
+            let promise1 = new AsyncSubject();
+            let promise2 = new AsyncSubject();
             let num_additions = 100;
 
             let p1 = channel.subscribe('topic1', (value) => {
@@ -57,13 +55,13 @@ const executeCommonBasicPubSubTests = (factory) => {
             });
 
             Promise.all([p1, p2]).then(() => {
-                Rx.Observable.concat(promise1, promise2).subscribe(undefined, undefined, () => {
+                Observable.concat(promise1, promise2).subscribe(undefined, undefined, () => {
                     expect(count1).to.equal(num_additions);
                     expect(count2).to.equal(num_additions);
                     done();
                 });
 
-                let range = Rx.Observable.range(1, num_additions);
+                let range = Observable.range(1, num_additions);
                 range.subscribe(() => channel.publish('topic1', 1));
                 range.subscribe(() => channel.publish('topic2', 1));
             });
@@ -96,14 +94,14 @@ const executeCommonBasicPubSubTests = (factory) => {
             Promise.all([p1, p2]).then(() => channel.publish('topic', true)).then(() => {
                 expect(count).to.equal(1001);
                 // each subscription should have fired exactly one time
-                setTimeout(function() {
+                setTimeout(function () {
                     done();
                 }, 1000);
             })
         });
 
         it('should execute the subscriptions in the order they were added', (done) => {
-            let sequence = new Rx.Subject();
+            let sequence = new Subject();
 
             sequence.take(3).toArray().subscribe(result => {
                 expect(result).to.deep.equal([1, 2, 3]);
@@ -122,7 +120,7 @@ const executeCommonBasicPubSubTests = (factory) => {
 
         it("should fire a subscription if it is registered with .once()", (done) => {
             const topic = randomValidChannelOrTopicName();
-            const promise =  channel.once(topic, (payload) => {
+            const promise = channel.once(topic, (payload) => {
                 expect(payload).to.equal("foo");
                 done();
             });
@@ -164,7 +162,7 @@ const executeCommonBasicPubSubTests = (factory) => {
             });
 
             return Promise.all([promise1, promise2, promise3]).then(tokens => {
-                let [token1, token2, token3] = tokens;
+                const [token1, token2, token3] = tokens as any;
                 return token1.dispose().then(count => {
                     expect(count).to.equal(2);
                     return token2.dispose();
@@ -199,8 +197,8 @@ const executeCommonBasicPubSubTests = (factory) => {
             const topic = randomValidChannelOrTopicName();
             const promise = channel.publish(topic, "foobar");
 
-            expect(promise).to.be.defined;
-            expect(promise.then).to.be.defined;
+            expect(promise).to.be.ok;
+            expect(promise.then).to.be.ok;
 
             promise.then(() => {
                 expect(true).to.be.ok;
@@ -208,10 +206,4 @@ const executeCommonBasicPubSubTests = (factory) => {
             });
         });
     });
-}
-
-if (typeof window === "undefined") {
-    module.exports = {
-        executeCommonBasicPubSubTests: executeCommonBasicPubSubTests
-    };
 }

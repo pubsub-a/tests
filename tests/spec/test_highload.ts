@@ -1,11 +1,10 @@
-if (typeof window === "undefined") {
-    let c = require("chai");
-    var expect = c.expect;
-    var Rx = require('rxjs/Rx');
-    var randomValidChannelOrTopicName = require('../test_helper').randomValidChannelOrTopicName;
-}
+import { expect } from "chai";
+import { Observable, AsyncSubject } from "rxjs/Rx";
 
-const executeHighLoadTests = (factory) => {
+import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+
+export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
     let pubsub1, pubsub2;
     let channel1, channel2;
@@ -15,8 +14,8 @@ const executeHighLoadTests = (factory) => {
         beforeEach(done => {
             [ pubsub1, pubsub2 ] = factory.getLinkedPubSubImplementation(2);
 
-            let channel1_ready = new Rx.AsyncSubject();
-            let channel2_ready = new Rx.AsyncSubject();
+            let channel1_ready = new AsyncSubject();
+            let channel2_ready = new AsyncSubject();
 
             let channel_name = "channel";
 
@@ -33,7 +32,7 @@ const executeHighLoadTests = (factory) => {
                 });
             });
 
-            Rx.Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
+            Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
                 done();
             });
         });
@@ -141,9 +140,3 @@ const executeHighLoadTests = (factory) => {
         // })
     });
 };
-
-if (typeof window === "undefined") {
-    module.exports = {
-        executeHighLoadTests: executeHighLoadTests
-    };
-}

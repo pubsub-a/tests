@@ -1,93 +1,55 @@
+import { executeChannelTests } from "./spec/test_channels";
+import { executeCommonBasicPubSubTests } from "./spec/test_common_basic_pubsub";
+import { executeDisconnectTests } from "./spec/test_disconnect";
+import { executeDisposeAndCleanupTests } from "./spec/test_dispose_and_cleanup";
+import { executeLinkedPubSubTests } from "./spec/test_linked_pubsub";
+import { executeStartStopTests } from "./spec/test_start_stop";
+import { executeHighLoadTests } from "./spec/test_highload";
+import { executeValidationTests } from "./spec/test_validation";
 
-/**
-@describe Will execute all tests that apply to all PubSub implementations
-@param getPubSubImplementation -  A factory function that should return a fresh (untouched) pubsub
-  instance of type PubSub. This factory is called in the beforeEach() method before each test is run.
-*/
-if (typeof window === "undefined") {
-    let registerPubSubImplementationFactory = require("./test_harness").registerPubSubImplementationFactory;
+import { IPubSub, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 
-    try {
-        // pubsub-micro
-        var factory = require("../../pubsub-a-micro/tests/spec-validation.js");
-        registerPubSubImplementationFactory(factory);
-    } catch(err) {
-        console.log('Could not load pubsub-micro tests: ' + err);
-    }
+const factories: Array<ImplementationFactory> = [];
 
-    try {
-         // pubsub-server-a-node
-         var factory = require("../../pubsub-a-server-node/tests/spec-validation.js");
-         registerPubSubImplementationFactory(factory);
-    } catch(err) {
-         console.log('Could not load pubsub-server-node tests: ' + err);
-    }
+try {
+    // pubsub-micro
+    var factory = require("@dynalon/pubsub-a-micro/dist/spec-validation");
+    factories.push(factory);
+} catch (err) {
+    console.log('Could not load pubsub-micro tests: ' + err);
+}
 
-} else {
-    // instead of require() the test cases, add them in the karma.conf.js file and expose as global variable
+try {
+    // pubsub-server-a-node
+    var factory = require("@dynalon/pubsub-a-server-node/dist/spec-validation");
+    factories.push(factory);
+} catch (err) {
+    console.log('Could not load pubsub-server-node tests: ' + err);
 }
 
 function runTests() {
-    let facs;
 
-    if (typeof window === "undefined") {
-        facs = require("./test_harness").factories;
-    } else {
-        // factories is a global variable in test_harness.js
-        facs = factories;
-    }
+    factories.forEach(function (factory) {
 
-    facs.forEach(function(factory) {
+        /*
+                require("es6-promise").polyfill();
 
-        var executeCommonBasicPubSubTests;
-        var executeChannelTests;
-        var executeSValidationTests;
-        var executeLinkedPubSubTests;
-        var executeDisposeAndCleanupTests;
-        var executeDisconnectTests;
-        var executeStartStopTests;
-        var executeHighLoadTests;
+                const getRandomInt = (min: number, max: number) => {
+                    min = Math.ceil(min);
+                    max = Math.floor(max);
+                    return Math.floor(Math.random() * (max - min)) + min;
+                }
 
-        if (typeof window === "undefined") {
-            executeCommonBasicPubSubTests = require("./spec/test_common_basic_pubsub").executeCommonBasicPubSubTests;
-            executeChannelTests = require("./spec/test_channels").executeChannelTests;
-            executeValidationTests = require("./spec/test_validation").executeValidationTests;
-            executeLinkedPubSubTests = require("./spec/test_linked_pubsub").executeLinkedPubSubTests;
-            executeDisposeAndCleanupTests = require("./spec/test_dispose_and_cleanup").executeDisposeAndCleanupTests;
-            executeDisconnectTests = require("./spec/test_disconnect").executeDisconnectTests;
-            executeStartStopTests = require("./spec/test_start_stop").executeStartStopTests;
-            executeHighLoadTests = require("./spec/test_highload").executeHighLoadTests;
-        } else {
-            const win = window as any;
-            executeCommonBasicPubSubTests = win.executeCommonBasicPubSubTests;
-            executeChannelTests = win.executeChannelTests;
-            executeValidationTests = win.executeValidationTests;
-            executeLinkedPubSubTests = win.executeLinkedPubSubTests;
-            executeDisposeAndCleanupTests = win.executeDisposeAndCleanupTests;
-            executeDisconnectTests = win.executeDisconnectTests;
-            executeStartStopTests = win.executeStartStopTests;
-            executeHighLoadTests = win.executeHighLoadTests;
-        }
+                const delayScheduler = (fn) => {
+                    let delay = getRandomInt(0, 500);
+                    setTimeout(fn, 0);
+                };
+                (Promise as any)._setScheduler(delayScheduler);
+        */
 
-/*
-        require("es6-promise").polyfill();
-
-        const getRandomInt = (min: number, max: number) => {
-            min = Math.ceil(min);
-            max = Math.floor(max);
-            return Math.floor(Math.random() * (max - min)) + min;
-        }
-
-        const delayScheduler = (fn) => {
-            let delay = getRandomInt(0, 500);
-            setTimeout(fn, 0);
-        };
-        (Promise as any)._setScheduler(delayScheduler);
-*/
-
-        executeStartStopTests(factory);
-        executeCommonBasicPubSubTests(factory);
         executeChannelTests(factory);
+        executeCommonBasicPubSubTests(factory);
+        executeStartStopTests(factory);
         executeValidationTests(factory);
         executeLinkedPubSubTests(factory);
         executeDisposeAndCleanupTests(factory);

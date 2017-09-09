@@ -1,18 +1,10 @@
+import { expect } from "chai";
+import { Observable } from "rxjs/Rx";
 
-if (typeof window === "undefined") {
-    let c = require("chai");
-    var expect = c.expect;
-}
+import { ImplementationFactory, InternalChannelTopic} from "@dynalon/pubsub-a-interfaces";
+import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
-// HACK replicate the channel topics else we need to publish pubsub-a-interfaces as module for browser
-// and nodejs
-class InternalChannelTopic {
-    static CLIENT_DISCONNECT = "client_disconnect";
-    static SUBSCRIBE_DISCONNECT = "subscribe_disconnect";
-    static UNSUBSCRIBE_DISCONNECT = "unsubscribe_disconnect";
-}
-
-const executeDisconnectTests = (factory) => {
+export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
     let pubsub1, pubsub2;
     let channel1, channel2;
@@ -197,10 +189,4 @@ const executeDisconnectTests = (factory) => {
             });
         });
     });
-}
-
-if (typeof window === "undefined") {
-    module.exports = {
-        executeDisconnectTests: executeDisconnectTests
-    };
 }
