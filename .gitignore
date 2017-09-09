@@ -1,6 +1,7 @@
 *.tmp
 *.swp
 .DS_Store
+package-lock.json
 node_modules/
 dist/
 npm-debug.log

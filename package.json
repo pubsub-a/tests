@@ -4,7 +4,7 @@
   "description": "PubSub/A spec test suite",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@dynalon/pubsub-a-interfaces": "^0.2.5",
+    "@dynalon/pubsub-a-interfaces": "^0.2.6",
     "@dynalon/pubsub-a-micro": "*",
     "@dynalon/pubsub-a-server-node": "*",
     "@types/chai": "^3.4.29",

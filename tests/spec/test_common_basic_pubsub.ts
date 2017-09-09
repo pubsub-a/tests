@@ -1,54 +1,52 @@
 import { expect } from "chai";
 import { Observable, AsyncSubject, Subject } from "rxjs/Rx";
 
-import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
-import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+import { IPubSub, IChannel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) => {
 
-    describe(`['${factory.name}] should pass the common PubSub implementation tests `, () => {
+    describe(`["${factory.name}] should pass the common PubSub implementation tests `, () => {
 
-        let pubsub;
-        let channel;
+        let pubsub: IPubSub;
+        let channel: IChannel;
 
         beforeEach(done => {
-            // increase the timeout
             pubsub = factory.getPubSubImplementation();
             pubsub.start().then(() => {
                 let random = randomValidChannelOrTopicName();
-                pubsub.channel(random).then(chan => {
+                pubsub.channel(random).then((chan: IChannel) => {
                     channel = chan;
                     done();
                 });
             });
         });
 
-
-        it('should accept a subscription and fire it when published', (done) => {
-            let subscriptionFunction = () => {
-                expect(true).to.be.true;
+        it("should accept a subscription and fire it when published", (done) => {
+            const topic = "myTopic";
+            const subscriptionFunction = (n: number) => {
+                expect(n).to.equal(1);
                 done();
             };
 
-            channel.subscribe('myTopic', subscriptionFunction).then(() => {
-                channel.publish('myTopic', 1);
+            channel.subscribe(topic, subscriptionFunction).then(() => {
+                channel.publish(topic, 1);
             });
-
         });
 
-        it('should handle multiple subscriptions in parallel', (done) => {
+        it("should handle multiple subscriptions in parallel", (done) => {
             let count1 = 0, count2 = 0;
             let promise1 = new AsyncSubject();
             let promise2 = new AsyncSubject();
             let num_additions = 100;
 
-            let p1 = channel.subscribe('topic1', (value) => {
+            let p1 = channel.subscribe<number>("topic1", (value) => {
                 count1 += value;
                 if (count1 >= num_additions)
                     promise1.complete();
             });
 
-            let p2 = channel.subscribe('topic2', (value) => {
+            let p2 = channel.subscribe<number>("topic2", (value) => {
                 count2 += value;
                 if (count2 >= num_additions)
                     promise2.complete();
@@ -61,61 +59,56 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
                     done();
                 });
 
-                let range = Observable.range(1, num_additions);
-                range.subscribe(() => channel.publish('topic1', 1));
-                range.subscribe(() => channel.publish('topic2', 1));
+                const range = Observable.range(1, num_additions);
+                range.subscribe(() => channel.publish("topic1", 1));
+                range.subscribe(() => channel.publish("topic2", 1));
             });
         });
 
-        it('should fire multiple subscriptions', () => {
+        it("should fire multiple subscriptions on a single publish", done => {
             let p1, p2;
+            const subscriptionsReady = new Subject<void>();
+            const publishReceived = new Subject<void>();
+            const topic = "myTopic";
 
-            let promise1 = new Promise((resolve, reject) => {
-                p1 = channel.subscribe('myTopic', resolve);
-            });
+            channel.subscribe(topic, () => publishReceived.next()).then(() => subscriptionsReady.next());
+            channel.subscribe(topic, () => publishReceived.next()).then(() => subscriptionsReady.next());
 
-            let promise2 = new Promise((resolve, reject) => {
-                p2 = channel.subscribe('myTopic', resolve);
-            });
-
-            Promise.all([p1, p2]).then(() => {
-                channel.publish('myTopic', 1);
-            });
-
-            return Promise.all([promise1, promise2]);
+            subscriptionsReady.take(2).toArray().subscribe(() => channel.publish(topic, 1));
+            publishReceived.take(2).toArray().subscribe(() => done());
         });
 
-        it('should fire each subscription only once if multiple subscriptions are available', (done) => {
+        it("should fire each subscription only once if multiple subscriptions are available", (done) => {
             let count = 0;
 
-            const p1 = channel.subscribe('topic', () => count += 1);
-            const p2 = channel.subscribe('topic', () => count += 1000);
+            const publishReceived = new Subject<void>();
 
-            Promise.all([p1, p2]).then(() => channel.publish('topic', true)).then(() => {
+            Observable.zip(
+                channel.subscribe("topic", () => { count += 1; publishReceived.next(); }),
+                channel.subscribe("topic", () => { count += 1000; publishReceived.next(); }),
+            ).subscribe(() => {
+                channel.publish("topic", true);
+            })
+
+            publishReceived.take(2).toArray().subscribe(() => {
                 expect(count).to.equal(1001);
-                // each subscription should have fired exactly one time
-                setTimeout(function () {
-                    done();
-                }, 1000);
+                done();
             })
         });
 
-        it('should execute the subscriptions in the order they were added', (done) => {
-            let sequence = new Subject();
+        it("should execute the subscriptions in the order they were added", (done) => {
+            const sequence = new Subject();
 
             sequence.take(3).toArray().subscribe(result => {
                 expect(result).to.deep.equal([1, 2, 3]);
                 done();
             });
 
-            let p1 = channel.subscribe('myTopic', () => sequence.next(1));
-            let p2 = channel.subscribe('myTopic', () => sequence.next(2));
-            let p3 = channel.subscribe('myTopic', () => {
-                sequence.next(3);
-                sequence.complete();
-            });
+            let p1 = channel.subscribe("myTopic", () => sequence.next(1));
+            let p2 = channel.subscribe("myTopic", () => sequence.next(2));
+            let p3 = channel.subscribe("myTopic", () => sequence.next(3));
 
-            Promise.all([p1, p2, p3]).then(() => channel.publish('myTopic', 1));
+            Promise.all([p1, p2, p3]).then(() => channel.publish("myTopic", 1));
         });
 
         it("should fire a subscription if it is registered with .once()", (done) => {
@@ -137,26 +130,27 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             const promise = channel.once(topic, (payload) => {
                 expect(payload).to.equal("foo");
                 expect(counter).to.equal(0);
-                counter++;
+                counter++
                 done();
             });
+
             promise.then(subs => {
                 channel.publish(topic, "foo");
                 channel.publish(topic, "foo");
             });
         });
 
-        it('should return the correct subscription counts', () => {
+        it("should return the correct subscription counts", () => {
             let fn = () => void 0;
-            let promise1 = channel.subscribe('myTopic', fn).then(t1 => {
+            let promise1 = channel.subscribe("myTopic", fn).then(t1 => {
                 expect(t1.count).to.equal(1);
                 return t1;
             });
-            let promise2 = channel.subscribe('myTopic', fn).then(t2 => {
+            let promise2 = channel.subscribe("myTopic", fn).then(t2 => {
                 expect(t2.count).to.equal(2);
                 return t2;
             });
-            let promise3 = channel.subscribe('myTopic', fn).then(t3 => {
+            let promise3 = channel.subscribe("myTopic", fn).then(t3 => {
                 expect(t3.count).to.equal(3);
                 return t3;
             });
@@ -177,18 +171,18 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
 
         it("should make sure unhandled exceptions in an observer function won't throw an error in the pubsub implementation", done => {
             const topic = randomValidChannelOrTopicName();
-            const observer = () => {
+            const subscriber = () => {
                 throw new Error("Expected error");
             }
 
-            channel.subscribe(topic, observer).then(() => {
+            channel.subscribe(topic, subscriber).then(() => {
                 try {
                     channel.publish(topic, "payload");
                     expect(true).to.be.ok;
                     done();
                 } catch (err) {
                     expect(false).to.be.ok;
-                    done();
+                    done("FAILED");
                 }
             });
         });

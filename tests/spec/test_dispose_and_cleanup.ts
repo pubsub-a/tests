@@ -1,21 +1,20 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/Rx";
 
-import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { IPubSub, IChannel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeDisposeAndCleanupTests = (factory: ImplementationFactory) => {
 
-    describe(`['${factory.name}] should pass dispose and cleanup tests`, function (){
-        let pubsub;
-        let channel;
-        let topic;
+    describe(`['${factory.name}] should pass dispose and cleanup tests`, function () {
+        let pubsub: IPubSub;
+        let channel: IChannel;
+        let topic: string;
 
         beforeEach(done => {
-            // increase the timeout
             pubsub = factory.getPubSubImplementation();
             topic = randomValidChannelOrTopicName();
-            let channel_name = randomValidChannelOrTopicName();
+            const channel_name = randomValidChannelOrTopicName();
             pubsub.start().then(() => {
                 pubsub.channel(channel_name).then(chan => {
                     channel = chan;
