@@ -22,7 +22,6 @@ module.exports = function (config) {
     // list of files / patterns to load in the browser
     files: [
       'node_modules/es6-promise/dist/es6-promise.auto.js',
-      'node_modules/chai-as-promised/lib/chai-as-promised.js',
       'tests/bundle.js'
     ],
 
