@@ -5,8 +5,8 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@dynalon/pubsub-a-interfaces": "^0.2.5",
-    "@dynalon/pubsub-a-micro": "^0.2.2",
-    "@dynalon/pubsub-a-server-node": "^0.2.1",
+    "@dynalon/pubsub-a-micro": "*",
+    "@dynalon/pubsub-a-server-node": "*",
     "@types/chai": "^3.4.29",
     "@types/mocha": "^2.2.28",
     "@types/node": "^4.0.30",
