@@ -1,32 +1,54 @@
 import { expect } from "chai";
 import { Observable, AsyncSubject } from "rxjs/Rx";
 
-import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { ImplementationFactory, IPubSub, IChannel } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
-    let pubsub1, pubsub2;
-    let channel1, channel2;
-
     describe(`[${factory.name}] should run the highload test`, () => {
 
+        let pubsub1: IPubSub, pubsub2: IPubSub;
+        let channel1: IChannel, channel2: IChannel;
+        let onClient1Disconnected: AsyncSubject<void>;
+        let onClient2Disconnected: AsyncSubject<void>;
+        // large random strings are slow as we wait for entropy; for this case we just garbage
+        // data to test stuff
+        const rs = randomString(1024);
+        function getRandomString(kilobytes) {
+            let str = "";
+            let i = 1;
+            while (i <= kilobytes) {
+                str += rs;
+                i++;
+            }
+            return str;
+        }
+
         beforeEach(done => {
-            [ pubsub1, pubsub2 ] = factory.getLinkedPubSubImplementation(2);
+            onClient1Disconnected = new AsyncSubject<void>();
+            onClient2Disconnected = new AsyncSubject<void>();
+            [pubsub1, pubsub2] = factory.getLinkedPubSubImplementation(2);
 
             let channel1_ready = new AsyncSubject();
             let channel2_ready = new AsyncSubject();
 
             let channel_name = "channel";
 
-            pubsub1.start(pubsub => {
-                pubsub1.channel(channel_name, (chan) => {
+            pubsub1.start(() => {
+                onClient1Disconnected.next(undefined);
+                onClient1Disconnected.complete();
+            }).then(pubsub => {
+                pubsub1.channel(channel_name).then(chan => {
                     channel1 = chan;
                     channel1_ready.complete();
                 });
             });
-            pubsub2.start(pubsub => {
-                pubsub2.channel(channel_name, (chan) => {
+            pubsub2.start(() => {
+                onClient2Disconnected.next(undefined);
+                onClient2Disconnected.complete();
+            }).then(pubsub => {
+                pubsub2.channel(channel_name).then((chan) => {
                     channel2 = chan;
                     channel2_ready.complete();
                 });
@@ -37,15 +59,25 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             });
         });
 
+        it("should disconnect when sending a message with roughly more than 5 megabytes", function(done) {
+            if (factory.name === "PubSubMicro") {
+                this.skip();
+            }
 
-        it("should handle tenthousand subscriptions to different topic simultaneously", function(done) {
+            onClient1Disconnected.subscribe(() => {
+                done();
+            });
+            channel1.publish('OVERLARGE_MESSAGE', getRandomString(1024 * 6));
+        })
+
+        it.skip("should handle tenthousand subscriptions to different topic simultaneously", function (done) {
             // set timeout to a minute for this test
             this.timeout(60000);
             let subscriptionsRegistered = 10000;
             let subscriptionsDisposed = 10000;
-            const payload  = randomString(5 * 1024);
+            const payload = randomString(5 * 1024);
 
-            while(subscriptionsRegistered > 0) {
+            while (subscriptionsRegistered > 0) {
                 const topic = randomValidChannelOrTopicName();
                 let token;
                 let subscriptionTriggered = new Promise(resolve => {
@@ -59,7 +91,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                 });
 
                 subscriptionTriggered.then(() => {
-                     token.dispose().then(() => {
+                    token.dispose().then(() => {
                         if (--subscriptionsDisposed == 0) {
                             done();
                         }
@@ -71,7 +103,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
         });
 
         // this test is nonsense, as the 9999 subscriptions are not forwarded to the server!
-        it("should handle thenthousand subscriptions with a 5k payload", function(done) {
+        it.skip("should handle thenthousand subscriptions with a 5k payload", function (done) {
             this.timeout(60000);
             let subscriptionsRegistered = 10000;
             let subscriptionsTriggered = 10000;
@@ -80,7 +112,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
             // TODO test with .dispose()
             const subscriptionsReady = new Promise(resolve => {
-                while(subscriptionsRegistered > 0) {
+                while (subscriptionsRegistered > 0) {
                     subscriptionsRegistered--;
                     channel1.subscribe(topic, p => {
                         expect(p.length).to.equal(1024 * 5);
@@ -101,7 +133,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             });
         });
 
-        it("should handle a subscription with tenthousand publishes of 5k", function(done) {
+        it.skip("should handle a subscription with tenthousand publishes of 5k", function (done) {
             this.timeout(60000);
             const topic = randomValidChannelOrTopicName();
             let numPublishes = 10000;

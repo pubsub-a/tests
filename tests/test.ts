@@ -54,7 +54,7 @@ function runTests() {
         executeLinkedPubSubTests(factory);
         executeDisposeAndCleanupTests(factory);
         executeDisconnectTests(factory);
-        // executeHighLoadTests(factory);
+        executeHighLoadTests(factory);
     });
 }
 
