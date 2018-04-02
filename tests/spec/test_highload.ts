@@ -8,8 +8,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
     describe(`[${factory.name}] should run the highload test`, () => {
 
-        let pubsub1: IPubSub, pubsub2: IPubSub;
-        let channel1: IChannel, channel2: IChannel;
+        let pubsub1: IPubSub, pubsub2: IPubSub, pubsub3: IPubSub;
+        let channel1: IChannel, channel2: IChannel, channel3: IChannel;
         let onClient1Disconnected: AsyncSubject<void>;
         let onClient2Disconnected: AsyncSubject<void>;
         // large random strings are slow as we wait for entropy; for this case we just garbage
@@ -28,10 +28,11 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
         beforeEach(done => {
             onClient1Disconnected = new AsyncSubject<void>();
             onClient2Disconnected = new AsyncSubject<void>();
-            [pubsub1, pubsub2] = factory.getLinkedPubSubImplementation(2);
+            [pubsub1, pubsub2, pubsub3] = factory.getLinkedPubSubImplementation(3);
 
             let channel1_ready = new AsyncSubject();
             let channel2_ready = new AsyncSubject();
+            let channel3_ready = new AsyncSubject();
 
             let channel_name = "channel";
 
@@ -54,12 +55,48 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                 });
             });
 
-            Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
+            pubsub3.start().then(pubsub => {
+                pubsub3.channel(channel_name).then((chan) => {
+                    channel3 = chan;
+                    channel3_ready.complete();
+                });
+            });
+
+
+            Observable.concat(channel1_ready, channel2_ready, channel3_ready).subscribe(undefined, undefined, () => {
                 done();
             });
         });
 
-        it("should disconnect when sending a message with roughly more than 5 megabytes", function(done) {
+        it.skip("should report the socket bytes written", function (done) {
+            if (factory.name === "PubSubMicro") {
+                this.skip();
+            }
+
+            const rand = randomValidChannelOrTopicName(1024);
+            let payload = '';
+            let megabytes = 50 * 1024;
+            while(megabytes-- >= 0) {
+                payload += rand;
+            }
+            console.info("go")
+
+            channel2.subscribe("A_MESSAGE", (pl) => { console.info("got pl2") })
+            channel3.subscribe("A_MESSAGE", (pl) => { console.info("got pl3") })
+
+            Observable.range(0, 100).subscribe(n => {
+                channel1.publish("A_MESSAGE", payload);
+            }, undefined, () => {
+                setTimeout(() => {
+                    done();
+                }, 1000)
+
+            })
+
+        })
+
+        // TODO limiters require  better suport in pubsub-a-server-node
+        it.skip("should disconnect when sending a message with roughly more than 5 megabytes", function (done) {
             if (factory.name === "PubSubMicro") {
                 this.skip();
             }
