@@ -25,7 +25,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch",
+    "develop": "tsc --watch",
     "bundle": "webpack",
     "node-tests": "mocha --timeout 5000 tests/test.js",
     "browser-tests": "karma start",
