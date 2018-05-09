@@ -51,7 +51,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                 }).then(() => {
                     const internalMessage = {
                         payload: id2, callback: () => {
-                            pubsub2.stop();
+                            pubsub2.stop({ reason: "LOCAL_DISCONNECT" });
                         }
                     };
                     internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, internalMessage);
@@ -70,7 +70,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                     const afterSubscribeDisconnect = () => {
                         const msg = {
                             payload: id2, callback: () => {
-                                pubsub2.stop();
+                                pubsub2.stop({ reason: "LOCAL_DISCONNECT" });
                                 setTimeout(done, 1000);
                             }
                         };
@@ -93,7 +93,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                         }).then(() => {
                             const internalMessage = {
                                 payload: id2, callback: () => {
-                                    pubsub2.stop();
+                                    pubsub2.stop({ reason: "LOCAL_DISCONNECT" });
                                 }
                             };
                             internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, internalMessage);
@@ -133,7 +133,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                     // id1 because its a valid id, but didn't subscribe to it!
                     const internalMessage = {
                         payload: id1, callback: () => {
-                            pubsub2.stop();
+                            pubsub2.stop({ reason: "LOCAL_DISCONNECT" });
                             setTimeout(done, 1000);
                         }
                     }
@@ -156,7 +156,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                     setTimeout(() => {
                         const msg2 = {
                             payload: id2, callback: () => {
-                                pubsub2.stop();
+                                pubsub2.stop({ reason: "LOCAL_DISCONNECT" });
                                 setTimeout(done, 500);
                             }
                         };
@@ -182,7 +182,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
                     const msg2 = {
                         payload: id2, callback: () => {
-                            pubsub2.stop();
+                            pubsub2.stop({ reason: "LOCAL_DISCONNECT" });
                         }
                     };
                     setTimeout(() => {
@@ -210,19 +210,11 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
             });
         });
 
-        it("should report correct error code when the local end disconnects", (done) => {
-            pubsub2.onStop.then((reason) => {
-                console.info("reason", reason)
-                expect(reason).to.equal("LOCAL_DISCONNECT");
-                done();
-            })
-            pubsub2.stop("LOCAL_DISCONNECT");
-        })
-
+        // TODO this is more of a start/stop test, move it there
         it("should report correct error code when the remote end disconnects", (done) => {
             pubsub1.channel("__INSTRUMENTATION").then(channel => {
-                pubsub2.onStop.then((reason) => {
-                    expect(reason).to.equal("REMOTE_DISCONNECT");
+                pubsub2.onStop.then(status => {
+                    expect(status.reason).to.equal("REMOTE_DISCONNECT");
                     done();
                 })
                 channel.publish("DISCONNECT_CLIENT", { clientId: pubsub2.clientId });

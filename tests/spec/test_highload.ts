@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Observable, AsyncSubject, concat, range } from "rxjs";
 
-import { ImplementationFactory, IPubSub, IChannel } from "@dynalon/pubsub-a-interfaces";
+import { ImplementationFactory, IPubSub, IChannel, StopStatus } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeHighLoadTests = (factory: ImplementationFactory) => {
@@ -10,8 +10,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
         let pubsub1: IPubSub, pubsub2: IPubSub, pubsub3: IPubSub;
         let channel1: IChannel, channel2: IChannel, channel3: IChannel;
-        let onClient1Disconnected: AsyncSubject<string>;
-        let onClient2Disconnected: AsyncSubject<string>;
+        let onClient1Disconnected: AsyncSubject<StopStatus>;
+        let onClient2Disconnected: AsyncSubject<StopStatus>;
         // large random strings are slow as we wait for entropy; for this case we just garbage
         // data to test stuff
         const rs = randomString(1024);
@@ -26,8 +26,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
         }
 
         beforeEach(done => {
-            onClient1Disconnected = new AsyncSubject<string>();
-            onClient2Disconnected = new AsyncSubject<string>();
+            onClient1Disconnected = new AsyncSubject<StopStatus>();
+            onClient2Disconnected = new AsyncSubject<StopStatus>();
             [pubsub1, pubsub2, pubsub3] = factory.getLinkedPubSubImplementation(3);
 
             let channel1_ready = new AsyncSubject();
@@ -37,8 +37,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             let channel_name = "channel";
 
             pubsub1.start().then(pubsub => {
-                pubsub.onStop.then(reason => {
-                    onClient1Disconnected.next(reason as string);
+                pubsub.onStop.then(status => {
+                    onClient1Disconnected.next(status);
                     onClient1Disconnected.complete();
                 });
 
@@ -48,8 +48,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                 });
             });
             pubsub2.start().then(pubsub => {
-                pubsub.onStop.then(reason => {
-                    onClient2Disconnected.next(reason as string);
+                pubsub.onStop.then(status => {
+                    onClient2Disconnected.next(status);
                     onClient2Disconnected.complete();
                 });
                 pubsub2.channel(channel_name).then((chan) => {
@@ -104,8 +104,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                 this.skip();
             }
 
-            onClient1Disconnected.subscribe((reason) => {
-                expect(reason).to.equal("REMOTE_DISCONNECT");
+            onClient1Disconnected.subscribe((status) => {
+                expect(status.reason).to.equal("REMOTE_DISCONNECT");
                 done();
             });
             channel1.publish('OVERLARGE_MESSAGE', getRandomString(37));

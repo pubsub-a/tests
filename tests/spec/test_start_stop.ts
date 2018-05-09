@@ -135,5 +135,13 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
                     })
             });
         });
+
+        it("should report correct error code when the local end disconnects", (done) => {
+            pubsub.onStop.then(status => {
+                expect(status.reason).to.equal("LOCAL_DISCONNECT");
+                done();
+            })
+            pubsub.stop({ reason: "LOCAL_DISCONNECT" });
+        })
     });
 }
