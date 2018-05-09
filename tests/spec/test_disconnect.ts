@@ -209,5 +209,25 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                 }
             });
         });
+
+        it("should report correct error code when the local end disconnects", (done) => {
+            pubsub2.onStop.then((reason) => {
+                console.info("reason", reason)
+                expect(reason).to.equal("LOCAL_DISCONNECT");
+                done();
+            })
+            pubsub2.stop("LOCAL_DISCONNECT");
+        })
+
+        it("should report correct error code when the remote end disconnects", (done) => {
+            pubsub1.channel("__INSTRUMENTATION").then(channel => {
+                pubsub2.onStop.then((reason) => {
+                    expect(reason).to.equal("REMOTE_DISCONNECT");
+                    done();
+                })
+                channel.publish("DISCONNECT_CLIENT", { clientId: pubsub2.clientId });
+            })
+        })
+
     });
 }

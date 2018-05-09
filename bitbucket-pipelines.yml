@@ -24,7 +24,7 @@ pipelines:
           # Its not a hard dependency in package.json but required for the tests
           - pushd "node_modules/@dynalon/pubsub-a-server-node"
           - npm run build
-          - npm run start &
+          - npm run start -- --debug &
           - popd
 
           - npm run build
