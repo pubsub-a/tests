@@ -10,8 +10,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
         let pubsub1: IPubSub, pubsub2: IPubSub, pubsub3: IPubSub;
         let channel1: IChannel, channel2: IChannel, channel3: IChannel;
-        let onClient1Disconnected: AsyncSubject<void>;
-        let onClient2Disconnected: AsyncSubject<void>;
+        let onClient1Disconnected: AsyncSubject<string>;
+        let onClient2Disconnected: AsyncSubject<string>;
         // large random strings are slow as we wait for entropy; for this case we just garbage
         // data to test stuff
         const rs = randomString(1024);
@@ -26,8 +26,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
         }
 
         beforeEach(done => {
-            onClient1Disconnected = new AsyncSubject<void>();
-            onClient2Disconnected = new AsyncSubject<void>();
+            onClient1Disconnected = new AsyncSubject<string>();
+            onClient2Disconnected = new AsyncSubject<string>();
             [pubsub1, pubsub2, pubsub3] = factory.getLinkedPubSubImplementation(3);
 
             let channel1_ready = new AsyncSubject();
@@ -36,19 +36,22 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
             let channel_name = "channel";
 
-            pubsub1.start(() => {
-                onClient1Disconnected.next(undefined);
-                onClient1Disconnected.complete();
-            }).then(pubsub => {
+            pubsub1.start().then(pubsub => {
+                pubsub.onStop.then(reason => {
+                    onClient1Disconnected.next(reason as string);
+                    onClient1Disconnected.complete();
+                });
+
                 pubsub1.channel(channel_name).then(chan => {
                     channel1 = chan;
                     channel1_ready.complete();
                 });
             });
-            pubsub2.start(() => {
-                onClient2Disconnected.next(undefined);
-                onClient2Disconnected.complete();
-            }).then(pubsub => {
+            pubsub2.start().then(pubsub => {
+                pubsub.onStop.then(reason => {
+                    onClient2Disconnected.next(reason as string);
+                    onClient2Disconnected.complete();
+                });
                 pubsub2.channel(channel_name).then((chan) => {
                     channel2 = chan;
                     channel2_ready.complete();
@@ -101,7 +104,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                 this.skip();
             }
 
-            onClient1Disconnected.subscribe(() => {
+            onClient1Disconnected.subscribe((reason) => {
+                expect(reason).to.equal("REMOTE_DISCONNECT");
                 done();
             });
             channel1.publish('OVERLARGE_MESSAGE', getRandomString(37));
