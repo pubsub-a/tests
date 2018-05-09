@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { Observable, AsyncSubject, Subject } from "rxjs/Rx";
+import { Observable, AsyncSubject, Subject, zip, concat, range } from "rxjs";
+import { take, skip, toArray } from "rxjs/operators";
 
 import { IPubSub, IChannel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { randomValidChannelOrTopicName } from "../test_helper";
@@ -53,15 +54,15 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             });
 
             Promise.all([p1, p2]).then(() => {
-                Observable.concat(promise1, promise2).subscribe(undefined, undefined, () => {
+                concat(promise1, promise2).subscribe(undefined, undefined, () => {
                     expect(count1).to.equal(num_additions);
                     expect(count2).to.equal(num_additions);
                     done();
                 });
 
-                const range = Observable.range(1, num_additions);
-                range.subscribe(() => channel.publish("topic1", 1));
-                range.subscribe(() => channel.publish("topic2", 1));
+                const rng = range(1, num_additions);
+                rng.subscribe(() => channel.publish("topic1", 1));
+                rng.subscribe(() => channel.publish("topic2", 1));
             });
         });
 
@@ -74,8 +75,8 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             channel.subscribe(topic, () => publishReceived.next()).then(() => subscriptionsReady.next());
             channel.subscribe(topic, () => publishReceived.next()).then(() => subscriptionsReady.next());
 
-            subscriptionsReady.take(2).toArray().subscribe(() => channel.publish(topic, 1));
-            publishReceived.take(2).toArray().subscribe(() => done());
+            subscriptionsReady.pipe(take(2), toArray()).subscribe(() => channel.publish(topic, 1));
+            publishReceived.pipe(take(2), toArray()).subscribe(() => done());
         });
 
         it("should fire each subscription only once if multiple subscriptions are available", (done) => {
@@ -83,14 +84,14 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
 
             const publishReceived = new Subject<void>();
 
-            Observable.zip(
+            zip(
                 channel.subscribe("topic", () => { count += 1; publishReceived.next(); }),
                 channel.subscribe("topic", () => { count += 1000; publishReceived.next(); }),
             ).subscribe(() => {
                 channel.publish("topic", true);
             })
 
-            publishReceived.take(2).toArray().subscribe(() => {
+            publishReceived.pipe(take(2), toArray()).subscribe(() => {
                 expect(count).to.equal(1001);
                 done();
             })
@@ -99,7 +100,7 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
         it("should execute the subscriptions in the order they were added", (done) => {
             const sequence = new Subject();
 
-            sequence.take(3).toArray().subscribe(result => {
+            sequence.pipe(take(3), toArray()).subscribe(result => {
                 expect(result).to.deep.equal([1, 2, 3]);
                 done();
             });

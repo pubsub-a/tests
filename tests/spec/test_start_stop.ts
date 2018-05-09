@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Observable } from "rxjs/Rx";
+import { Observable } from "rxjs";
 
 import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";

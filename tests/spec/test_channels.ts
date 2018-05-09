@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Observable, AsyncSubject } from "rxjs/Rx";
+import { Observable, from, zip } from "rxjs";
 
 import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { IPubSub, IChannel } from "@dynalon/pubsub-a-interfaces";
@@ -49,10 +49,10 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             const channel2Name = "channel2"
             const topic = randomValidChannelOrTopicName();
 
-            const c1 = Observable.fromPromise<IChannel>(pubsub.channel(channel1Name));
-            const c2 = Observable.fromPromise<IChannel>(pubsub.channel(channel2Name));
+            const c1 = from<IChannel>(pubsub.channel(channel1Name));
+            const c2 = from<IChannel>(pubsub.channel(channel2Name));
 
-            Observable.zip(c1, c2).subscribe(([channel1, channel2]) => {
+            zip(c1, c2).subscribe(([channel1, channel2]) => {
 
                 const p1 = channel1.subscribe(topic, () => {
                     expect(true).to.be.true;
@@ -77,10 +77,10 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             const channelName = "channel1";
             const topic = randomValidChannelOrTopicName();
 
-            const c1 = Observable.fromPromise<IChannel>(pubsub.channel(channelName));
-            const c2 = Observable.fromPromise<IChannel>(pubsub.channel(channelName));
+            const c1 = from<IChannel>(pubsub.channel(channelName));
+            const c2 = from<IChannel>(pubsub.channel(channelName));
 
-            Observable.zip(c1, c2).subscribe(([channel1, channel2]) => {
+            zip(c1, c2).subscribe(([channel1, channel2]) => {
                 channel1.subscribe(topic, () => {
                     expect(true).to.be.true;
                     done();

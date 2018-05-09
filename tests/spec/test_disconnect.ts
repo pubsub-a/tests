@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Observable } from "rxjs/Rx";
+import { Observable } from "rxjs";
 
 import {
     ImplementationFactory, InternalChannelTopic, IPubSub, IChannel
@@ -13,7 +13,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
     let channel1: IChannel, channel2: IChannel;
     let id1: string, id2: string;
 
-    describe(`[${factory.name}] should pass disconnect event tests`, function () {
+    describe(`[${factory.name}] should pass remote-end disconnect event tests`, function () {
         // PubSubMicro has no disconnect logic
         if (factory.name == "PubSubMicro") {
             console.info("NOT EXECUTING TESTS: PubSubMicro does not support disconnect logic yet");

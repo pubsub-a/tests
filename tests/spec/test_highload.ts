@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Observable, AsyncSubject } from "rxjs/Rx";
+import { Observable, AsyncSubject, concat, range } from "rxjs";
 
 import { ImplementationFactory, IPubSub, IChannel } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
@@ -63,7 +63,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             });
 
 
-            Observable.concat(channel1_ready, channel2_ready, channel3_ready).subscribe(undefined, undefined, () => {
+            concat(channel1_ready, channel2_ready, channel3_ready).subscribe(undefined, undefined, () => {
                 done();
             });
         });
@@ -76,7 +76,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             const rand = randomValidChannelOrTopicName(1024);
             let payload = '';
             let megabytes = 50 * 1024;
-            while(megabytes-- >= 0) {
+            while (megabytes-- >= 0) {
                 payload += rand;
             }
             console.info("go")
@@ -84,7 +84,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             channel2.subscribe("A_MESSAGE", (pl) => { console.info("got pl2") })
             channel3.subscribe("A_MESSAGE", (pl) => { console.info("got pl3") })
 
-            Observable.range(0, 100).subscribe(n => {
+            range(0, 100).subscribe(n => {
                 channel1.publish("A_MESSAGE", payload);
             }, undefined, () => {
                 setTimeout(() => {
@@ -96,7 +96,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
         })
 
         // TODO limiters require  better suport in pubsub-a-server-node
-        it.skip("should disconnect when sending a message with roughly more than 5 megabytes", function (done) {
+        it("should disconnect when sending a message with roughly more than 37 kilobytes", function (done) {
             if (factory.name === "PubSubMicro") {
                 this.skip();
             }
@@ -104,7 +104,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             onClient1Disconnected.subscribe(() => {
                 done();
             });
-            channel1.publish('OVERLARGE_MESSAGE', getRandomString(1024 * 6));
+            channel1.publish('OVERLARGE_MESSAGE', getRandomString(37));
         })
 
         it.skip("should handle tenthousand subscriptions to different topic simultaneously", function (done) {

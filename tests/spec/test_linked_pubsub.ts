@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Observable, AsyncSubject } from "rxjs/Rx";
+import { Observable, AsyncSubject, concat } from "rxjs";
 
 import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
@@ -33,7 +33,7 @@ export const executeLinkedPubSubTests = (factory: ImplementationFactory) => {
                 });
             });
 
-            Observable.concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
+            concat(channel1_ready, channel2_ready).subscribe(undefined, undefined, () => {
                 done();
             });
         });

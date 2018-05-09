@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Observable } from "rxjs/Rx";
+import { Observable, range } from "rxjs";
 
 import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
@@ -28,7 +28,7 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
                 pubsub.channel(channel_name);
             };
 
-            Observable.range(1, 63).subscribe(length => {
+            range(1, 63).subscribe(length => {
                 expect(() => channel_generation(length)).not.to.throw();
             }, undefined, done);
         });
@@ -101,7 +101,7 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
                 channel.subscribe(topic_name, () => void 0);
             };
 
-            Observable.range(1, 255).subscribe(length => {
+            range(1, 255).subscribe(length => {
                 expect(() => topic_generation_publish(length)).not.to.throw();
                 expect(() => topic_generation_subscribe(length)).not.to.throw();
             }, undefined, done);

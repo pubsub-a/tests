@@ -5,7 +5,7 @@
         "declaration": false,
         "module": "commonjs",
         "strictNullChecks": true,
-        "lib": [ "es5", "es2015.promise", "dom" ],
+        "lib": [ "es5", "es2015.promise", "dom", "es2015.iterable", "es2015.symbol" ],
         "types": ["mocha", "chai", "node" ]
     },
     "include": [
