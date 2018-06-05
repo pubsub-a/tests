@@ -211,7 +211,8 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         });
 
         // TODO this is more of a start/stop test, move it there
-        it("should report correct error code when the remote end disconnects", (done) => {
+        // don't forget to supply --debug to the pubsub-a-server to enable instrumentation!
+        it("should report correct error code when the remote end disconnects [INSTRUMENTATION REQUIRED]", (done) => {
             pubsub1.channel("__INSTRUMENTATION").then(channel => {
                 pubsub2.onStop.then(status => {
                     expect(status.reason).to.equal("REMOTE_DISCONNECT");
