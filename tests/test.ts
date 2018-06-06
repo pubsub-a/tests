@@ -7,13 +7,13 @@ import { executeStartStopTests } from "./spec/test_start_stop";
 import { executeHighLoadTests } from "./spec/test_highload";
 import { executeValidationTests } from "./spec/test_validation";
 
-import { IPubSub, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { PubSub, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 
 const factories: Array<ImplementationFactory> = [];
 
 try {
     // pubsub-micro
-    var factory = require("@dynalon/pubsub-a-micro/dist/spec-validation");
+    const factory = require("@dynalon/pubsub-a-micro/dist/spec-validation");
     factories.push(factory);
 } catch (err) {
     console.log('Could not load pubsub-micro tests: ' + err);
@@ -21,7 +21,7 @@ try {
 
 try {
     // pubsub-server-a-node
-    var factory = require("@dynalon/pubsub-a-server-node/dist/spec-validation");
+    const factory = require("@dynalon/pubsub-a-server-node/dist/spec-validation");
     factories.push(factory);
 } catch (err) {
     console.log('Could not load pubsub-server-node tests: ' + err);

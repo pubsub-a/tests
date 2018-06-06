@@ -2,15 +2,15 @@ import { expect } from "chai";
 import { Observable } from "rxjs";
 
 import {
-    ImplementationFactory, InternalChannelTopic, IPubSub, IChannel
+    ImplementationFactory, InternalChannelTopic, PubSub, Channel
 } from "@dynalon/pubsub-a-interfaces";
 
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
-    let pubsub1: IPubSub, pubsub2: IPubSub;
-    let channel1: IChannel, channel2: IChannel;
+    let pubsub1: PubSub, pubsub2: PubSub;
+    let channel1: Channel, channel2: Channel;
     let id1: string, id2: string;
 
     describe(`[${factory.name}] should pass remote-end disconnect event tests`, function () {
@@ -45,7 +45,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should be able to subscribe to a disconnect event from other clients", function (done) {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal").then(internalChannel => {
-                internalChannel.subscribe(InternalChannelTopic.CLIENT_DISCONNECT, (clientUuid) => {
+                internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     expect(clientUuid).to.equal(id2);
                     done();
                 }).then(() => {
@@ -54,7 +54,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                             pubsub2.stop({ reason: "LOCAL_DISCONNECT" });
                         }
                     };
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, internalMessage);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", internalMessage);
                 })
             });
         });
@@ -62,7 +62,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should not trigger a disconnect event when we unsubscribed from it", function (done) {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal").then(internalChannel => {
-                internalChannel.subscribe(InternalChannelTopic.CLIENT_DISCONNECT, (clientUuid) => {
+                internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     done("Error: got disconnect event even though we unsubscribed");
                 }).then(() => {
                     // we can't dispose the token as this will locally unsubscribe so we trigger
@@ -74,10 +74,10 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                                 setTimeout(done, 1000);
                             }
                         };
-                        internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, msg);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", msg);
                     }
                     const internalMessage = { payload: id2, callback: afterSubscribeDisconnect };
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, internalMessage);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", internalMessage);
                 });
             });
         });
@@ -85,9 +85,9 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should be able to subscribe multiple times to a disconnect event", function (done) {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal").then(internalChannel => {
-                internalChannel.subscribe(InternalChannelTopic.CLIENT_DISCONNECT, (clientUuid) => void 0)
+                internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => void 0)
                     .then(() => {
-                        internalChannel.subscribe(InternalChannelTopic.CLIENT_DISCONNECT, (clientUuid) => {
+                        internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                             expect(clientUuid).to.equal(id2);
                             done();
                         }).then(() => {
@@ -96,7 +96,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                                     pubsub2.stop({ reason: "LOCAL_DISCONNECT" });
                                 }
                             };
-                            internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, internalMessage);
+                            internalChannel.publish("SUBSCRIBE_DISCONNECT", internalMessage);
                         });
                     });
             });
@@ -105,7 +105,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should call the InternalChannelMessage callback even when we are already subscribed", function (done) {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal").then(internalChannel => {
-                internalChannel.subscribe(InternalChannelTopic.CLIENT_DISCONNECT, (clientUuid) => {
+                internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     expect(clientUuid).to.equal(id2);
                     done();
                 }).then(() => {
@@ -116,10 +116,10 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                                     done();
                                 }
                             };
-                            internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, internalMessage2);
+                            internalChannel.publish("SUBSCRIBE_DISCONNECT", internalMessage2);
                         }
                     };
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, internalMessage);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", internalMessage);
                 });
             });
         });
@@ -127,7 +127,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should not trigger subscribe_disconnect events for ids we never subscribed", function (done) {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal").then(internalChannel => {
-                internalChannel.subscribe(InternalChannelTopic.CLIENT_DISCONNECT, (clientUuid) => {
+                internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     done("Error: shouldnt receive a disconnect event");
                 }).then(() => {
                     // id1 because its a valid id, but didn't subscribe to it!
@@ -137,21 +137,21 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                             setTimeout(done, 1000);
                         }
                     }
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, internalMessage);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", internalMessage);
                 });
             });
         });
 
         it("should only unsubribe from disconnect events when unsubscribe_disconnect is called exactly the same time as subscribe_disconnect", done => {
             pubsub1.channel("__internal").then(internalChannel => {
-                internalChannel.subscribe(InternalChannelTopic.CLIENT_DISCONNECT, (clientUuid) => {
+                internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     done("Error: shouldnt receive a disconnect event");
                 }).then(() => {
                     const msg = { payload: id2 };
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, msg);
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, msg);
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, msg);
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, msg);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", msg);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", msg);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", msg);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", msg);
 
                     setTimeout(() => {
                         const msg2 = {
@@ -160,10 +160,10 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                                 setTimeout(done, 500);
                             }
                         };
-                        internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, { payload: id2 });
-                        internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, { payload: id2 });
-                        internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, { payload: id2 });
-                        internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, msg2);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", { payload: id2 });
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", { payload: id2 });
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", { payload: id2 });
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", msg2);
                     }, 1000);
                 });
             });
@@ -171,14 +171,14 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
         it("should not unsubscribe from disconnect events when unsubscribe_disconnect is called less often than subscribe_disconnect", done => {
             pubsub1.channel("__internal").then(internalChannel => {
-                internalChannel.subscribe(InternalChannelTopic.CLIENT_DISCONNECT, (clientUuid) => {
+                internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     done();
                 }).then(() => {
                     const msg = { payload: id2 };
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, msg);
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, msg);
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, msg);
-                    internalChannel.publish(InternalChannelTopic.SUBSCRIBE_DISCONNECT, msg);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", msg);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", msg);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", msg);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", msg);
 
                     const msg2 = {
                         payload: id2, callback: () => {
@@ -186,9 +186,9 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                         }
                     };
                     setTimeout(() => {
-                        internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, { payload: id2 });
-                        internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, { payload: id2 });
-                        internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, msg2);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", { payload: id2 });
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", { payload: id2 });
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", msg2);
                     }, 500);
                 });
             });
@@ -202,7 +202,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                             done("Error: callback should not be called as there are no subscribe_disconnect subscriptions");
                         }
                     }
-                    internalChannel.publish(InternalChannelTopic.UNSUBSCRIBE_DISCONNECT, msg);
+                    internalChannel.publish("UNSUBSCRIBE_DISCONNECT", msg);
                     setTimeout(done, 1000);
                 } catch (err) {
                     done(err);

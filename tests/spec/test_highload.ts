@@ -1,15 +1,15 @@
 import { expect } from "chai";
 import { Observable, AsyncSubject, concat, range } from "rxjs";
 
-import { ImplementationFactory, IPubSub, IChannel, StopStatus } from "@dynalon/pubsub-a-interfaces";
+import { ImplementationFactory, PubSub, Channel, StopStatus } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
     describe(`[${factory.name}] should run the highload test`, () => {
 
-        let pubsub1: IPubSub, pubsub2: IPubSub, pubsub3: IPubSub;
-        let channel1: IChannel, channel2: IChannel, channel3: IChannel;
+        let pubsub1: PubSub, pubsub2: PubSub, pubsub3: PubSub;
+        let channel1: Channel, channel2: Channel, channel3: Channel;
         let onClient1Disconnected: AsyncSubject<StopStatus>;
         let onClient2Disconnected: AsyncSubject<StopStatus>;
         // large random strings are slow as we wait for entropy; for this case we just garbage

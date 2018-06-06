@@ -2,21 +2,21 @@ import { expect } from "chai";
 import { Observable, AsyncSubject, Subject, zip, concat, range } from "rxjs";
 import { take, skip, toArray } from "rxjs/operators";
 
-import { IPubSub, IChannel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { PubSub, Channel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) => {
 
     describe(`["${factory.name}] should pass the common PubSub implementation tests `, () => {
 
-        let pubsub: IPubSub;
-        let channel: IChannel;
+        let pubsub: PubSub;
+        let channel: Channel;
 
         beforeEach(done => {
             pubsub = factory.getPubSubImplementation();
             pubsub.start().then(() => {
                 let random = randomValidChannelOrTopicName();
-                pubsub.channel(random).then((chan: IChannel) => {
+                pubsub.channel(random).then((chan: Channel) => {
                     channel = chan;
                     done();
                 });

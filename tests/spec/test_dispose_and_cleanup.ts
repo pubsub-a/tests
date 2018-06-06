@@ -1,13 +1,13 @@
 import { expect } from "chai";
 
-import { IPubSub, IChannel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { PubSub, Channel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeDisposeAndCleanupTests = (factory: ImplementationFactory) => {
 
     describe(`['${factory.name}] should pass dispose and cleanup tests`, function () {
-        let pubsub: IPubSub;
-        let channel: IChannel;
+        let pubsub: PubSub;
+        let channel: Channel;
         let topic: string;
 
         beforeEach(done => {

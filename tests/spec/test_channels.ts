@@ -2,12 +2,12 @@ import { expect } from "chai";
 import { Observable, from, zip } from "rxjs";
 
 import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
-import { IPubSub, IChannel } from "@dynalon/pubsub-a-interfaces";
+import { PubSub, Channel } from "@dynalon/pubsub-a-interfaces";
 
 import { randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeChannelTests = (factory: ImplementationFactory) => {
-    let pubsub: IPubSub;
+    let pubsub: PubSub;
 
     describe(`[${factory.name}] should pass common channel tests`, () => {
 
@@ -16,7 +16,7 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             pubsub.start().then(() => done());
         });
 
-        const expectToBeAChannel = (channel: IChannel) => {
+        const expectToBeAChannel = (channel: Channel) => {
             expect(channel.publish).to.be.a('function');
             expect(channel.subscribe).to.be.a('function');
             expect(channel.name).to.be.a('string');
@@ -24,14 +24,14 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
         }
 
         it("should create a channel asynchronously", done => {
-            pubsub.channel(randomValidChannelOrTopicName()).then((chan: IChannel) => {
+            pubsub.channel(randomValidChannelOrTopicName()).then((chan: Channel) => {
                 expectToBeAChannel(chan);
                 done();
             });
         });
 
         it("should make sure a channel has a reference to the pubsub instance it was used to create", done => {
-            pubsub.channel(randomValidChannelOrTopicName()).then((chan: IChannel) => {
+            pubsub.channel(randomValidChannelOrTopicName()).then((chan: Channel) => {
                 expect(chan.pubsub).to.equal(pubsub);
                 done();
             })
@@ -49,8 +49,8 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             const channel2Name = "channel2"
             const topic = randomValidChannelOrTopicName();
 
-            const c1 = from<IChannel>(pubsub.channel(channel1Name));
-            const c2 = from<IChannel>(pubsub.channel(channel2Name));
+            const c1 = from<Channel>(pubsub.channel(channel1Name));
+            const c2 = from<Channel>(pubsub.channel(channel2Name));
 
             zip(c1, c2).subscribe(([channel1, channel2]) => {
 
@@ -77,8 +77,8 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             const channelName = "channel1";
             const topic = randomValidChannelOrTopicName();
 
-            const c1 = from<IChannel>(pubsub.channel(channelName));
-            const c2 = from<IChannel>(pubsub.channel(channelName));
+            const c1 = from<Channel>(pubsub.channel(channelName));
+            const c2 = from<Channel>(pubsub.channel(channelName));
 
             zip(c1, c2).subscribe(([channel1, channel2]) => {
                 channel1.subscribe(topic, () => {
