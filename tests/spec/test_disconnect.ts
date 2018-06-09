@@ -11,9 +11,9 @@ import { disconnect } from "cluster";
 export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
     // __INSTRUMENTATION works for server in debug mode
-    const disconnectClient = (pubsub: PubSub, clientId: string) => {
+    const disconnectClient = (pubsub: PubSub, clientId: string, reason: string = "INSTRUMENTATION DISCONNECT") => {
         pubsub.channel("__INSTRUMENTATION").then(channel => {
-            channel.publish("DISCONNECT_CLIENT", { clientId });
+            channel.publish("DISCONNECT_CLIENT", { clientId, reason });
         })
     };
 
@@ -196,6 +196,17 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                 done();
             })
             disconnectClient(pubsub1, id2);
+        })
+
+        it("should be possible to extract the disconnect reason", done => {
+            const disconnectReason = randomString(32);
+            pubsub2.onStop.then(status => {
+                expect(status.additionalInfo).to.equal(disconnectReason + "\n");
+                done();
+            }).catch((err) => {
+                done(err);
+            })
+            disconnectClient(pubsub1, id2, disconnectReason);
         })
 
     });

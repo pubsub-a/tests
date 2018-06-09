@@ -98,7 +98,6 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
         })
 
-        // TODO limiters require  better suport in pubsub-a-server-node
         it("should disconnect when sending a message with roughly more than 37 kilobytes", function (done) {
             if (factory.name === "PubSubMicro") {
                 this.skip();
@@ -106,6 +105,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
             onClient1Disconnected.subscribe((status) => {
                 expect(status.reason).to.equal("REMOTE_DISCONNECT");
+                expect(status.additionalInfo).to.contain("MAX_MSG_SIZE")
                 done();
             });
             channel1.publish('OVERLARGE_MESSAGE', getRandomString(37));
