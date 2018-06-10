@@ -11,9 +11,9 @@ import { disconnect } from "cluster";
 export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
     // __INSTRUMENTATION works for server in debug mode
-    const disconnectClient = (pubsub: PubSub, clientId: string, reason: string = "INSTRUMENTATION DISCONNECT") => {
+    const disconnectClient = (pubsub: PubSub, clientId: string, msg: string = "INSTRUMENTATION DISCONNECT") => {
         pubsub.channel("__INSTRUMENTATION").then(channel => {
-            channel.publish("DISCONNECT_CLIENT", { clientId, reason });
+            channel.publish("DISCONNECT_CLIENT", { clientId, reason: { reason: "REMOTE_DISCONNECT", additionalInfo: msg } });
         })
     };
 
@@ -59,11 +59,9 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
             pubsub1.channel("__internal").then(internalChannel1 => {
                 Promise.all([
                     internalChannel1.subscribe("CLIENT_DISCONNECT", failure),
-                    internalChannel1.subscribe("DISCONNECT_REASON", failure),
                 ]).then(() => {
                     pubsub2.channel("__internal").then(internalChannel2 => {
                         expect(() => internalChannel2.publish("CLIENT_DISCONNECT", id2 as any)).to.throw();
-                        expect(() => internalChannel2.publish("DISCONNECT_REASON", "Connection too slow" as any)).to.throw();
                         setTimeout(() => done(), 100)
                     })
                 })
@@ -201,7 +199,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should be possible to extract the disconnect reason", done => {
             const disconnectReason = randomString(32);
             pubsub2.onStop.then(status => {
-                expect(status.additionalInfo).to.equal(disconnectReason + "\n");
+                expect(status.additionalInfo).to.equal(disconnectReason);
                 done();
             }).catch((err) => {
                 done(err);

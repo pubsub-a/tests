@@ -50,15 +50,7 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
                 expect(pubsub.isStarted).to.equal(true);
                 done();
             })
-        })
 
-        it("should resolve the onStart promise after the start method is complete", done => {
-            pubsub.onStart.then(done);
-            pubsub.start();
-        })
-
-        it("should set the onStart promise after the creation of the pubsub constructor is done", () => {
-            expect(pubsub.onStart).to.be.ok;
         })
 
         it("should set the onStop promise after the creation of the pubsub constructor is done", () => {

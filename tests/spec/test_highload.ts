@@ -105,6 +105,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
             onClient1Disconnected.subscribe((status) => {
                 expect(status.reason).to.equal("REMOTE_DISCONNECT");
+                expect(status.code).to.equal(220)
                 expect(status.additionalInfo).to.contain("MAX_MSG_SIZE")
                 done();
             });
