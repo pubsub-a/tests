@@ -4,6 +4,19 @@ import { Observable, AsyncSubject, concat, range } from "rxjs";
 import { ImplementationFactory, PubSub, Channel, StopStatus } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
+// large random strings are slow as we wait for entropy; for this case we just garbage
+// data to test stuff
+function getRandomKilobytes(kilobytes: number) {
+    const rs = randomString(1024);
+    let str = "";
+    let i = 1;
+    while (i <= kilobytes) {
+        str += rs;
+        i++;
+    }
+    return str;
+}
+
 export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
     describe(`[${factory.name}] should run the highload test`, () => {
@@ -12,19 +25,6 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
         let channel1: Channel, channel2: Channel, channel3: Channel;
         let onClient1Disconnected: AsyncSubject<StopStatus>;
         let onClient2Disconnected: AsyncSubject<StopStatus>;
-        // large random strings are slow as we wait for entropy; for this case we just garbage
-        // data to test stuff
-        const rs = randomString(1024);
-        function getRandomString(kilobytes) {
-            let str = "";
-            let i = 1;
-            while (i <= kilobytes) {
-                str += rs;
-                i++;
-            }
-            return str;
-        }
-
         beforeEach(done => {
             onClient1Disconnected = new AsyncSubject<StopStatus>();
             onClient2Disconnected = new AsyncSubject<StopStatus>();
@@ -109,15 +109,15 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                 expect(status.additionalInfo).to.contain("MAX_MSG_SIZE")
                 done();
             });
-            channel1.publish('OVERLARGE_MESSAGE', getRandomString(37));
+            channel1.publish('OVERLARGE_MESSAGE', getRandomKilobytes(37));
         })
 
-        it.skip("should handle tenthousand subscriptions to different topic simultaneously", function (done) {
+        it("should handle tenthousand subscriptions to different topic simultaneously", function (done) {
             // set timeout to a minute for this test
             this.timeout(60000);
             let subscriptionsRegistered = 10000;
             let subscriptionsDisposed = 10000;
-            const payload = randomString(5 * 1024);
+            const payload = getRandomKilobytes(1);
 
             while (subscriptionsRegistered > 0) {
                 const topic = randomValidChannelOrTopicName();
@@ -144,52 +144,19 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             };
         });
 
-        // this test is nonsense, as the 9999 subscriptions are not forwarded to the server!
-        it.skip("should handle thenthousand subscriptions with a 5k payload", function (done) {
-            this.timeout(60000);
-            let subscriptionsRegistered = 10000;
-            let subscriptionsTriggered = 10000;
-            const topic = randomValidChannelOrTopicName();
-            const payload = randomString(1024 * 5);
-
-            // TODO test with .dispose()
-            const subscriptionsReady = new Promise(resolve => {
-                while (subscriptionsRegistered > 0) {
-                    subscriptionsRegistered--;
-                    channel1.subscribe(topic, p => {
-                        expect(p.length).to.equal(1024 * 5);
-                        if (--subscriptionsTriggered == 0) {
-                            done();
-                        }
-
-                    }).then(() => {
-                        if (subscriptionsRegistered == 0) {
-                            resolve();
-                        }
-                    });
-                }
-            });
-
-            subscriptionsReady.then(() => {
-                channel2.publish(topic, payload);
-            });
-        });
-
-        it.skip("should handle a subscription with tenthousand publishes of 5k", function (done) {
+        it("should handle a single subscription with tenthousand publishes of 1k", function (done) {
             this.timeout(60000);
             const topic = randomValidChannelOrTopicName();
             let numPublishes = 10000;
             let numTriggered = 10000;
-            let payloadSize = 5 * 1024;
 
             channel1.subscribe(topic, (payload) => {
                 if (--numTriggered <= 0) {
-                    let stop = new Date().getTime();
                     done();
                 }
             }).then(() => {
                 while (numPublishes-- > 0) {
-                    channel2.publish(topic, randomString(payloadSize));
+                    channel2.publish(topic, getRandomKilobytes(1));
                 }
             });
         })
