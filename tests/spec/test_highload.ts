@@ -6,8 +6,8 @@ import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 // large random strings are slow as we wait for entropy; for this case we just garbage
 // data to test stuff
+const rs = randomString(1024);
 function getRandomKilobytes(kilobytes: number) {
-    const rs = randomString(1024);
     let str = "";
     let i = 1;
     while (i <= kilobytes) {

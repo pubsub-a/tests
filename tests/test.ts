@@ -31,20 +31,19 @@ function runTests() {
 
     factories.forEach(function (factory) {
 
-        /*
-                require("es6-promise").polyfill();
+        /* TODO: this doesn't work anymore, the polyfill is not applied?
+        require("es6-promise").polyfill();
+        const getRandomInt = (min: number, max: number) => {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
 
-                const getRandomInt = (min: number, max: number) => {
-                    min = Math.ceil(min);
-                    max = Math.floor(max);
-                    return Math.floor(Math.random() * (max - min)) + min;
-                }
-
-                const delayScheduler = (fn) => {
-                    let delay = getRandomInt(0, 500);
-                    setTimeout(fn, 0);
-                };
-                (Promise as any)._setScheduler(delayScheduler);
+        const delayScheduler = (fn) => {
+            let delay = getRandomInt(500, 900);
+            setTimeout(fn, delay);
+        };
+        (Promise as any)._setScheduler(delayScheduler);
         */
 
         executeChannelTests(factory);
@@ -54,7 +53,13 @@ function runTests() {
         executeLinkedPubSubTests(factory);
         executeDisposeAndCleanupTests(factory);
         executeDisconnectTests(factory);
-        executeHighLoadTests(factory);
+
+        const runningInCIEnvironment =  typeof process.env['CI'] !== 'undefined';
+        if (!runningInCIEnvironment) {
+            executeHighLoadTests(factory);
+        } else {
+            console.info("Skipping high load tests as I am running in a CI environment")
+        }
     });
 }
 
