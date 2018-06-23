@@ -2,7 +2,34 @@ import { expect } from "chai";
 import { Observable, AsyncSubject, concat, range } from "rxjs";
 
 import { ImplementationFactory, PubSub, Channel, StopStatus } from "@dynalon/pubsub-a-interfaces";
-import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+import { randomString, randomValidChannelOrTopicName, deferMs } from "../test_helper";
+
+/**
+ * README TUNING
+ *
+ * There are various limits on OS level, process level etc. that might limit the maximum number of sockets.
+ *
+ * Linux:
+ *  * ulimit -n -> Shows number of allowed sockets per process: On Ubuntu 18.04 the default is only 1024
+ *    increase with: ulimit -n 99999
+ *  * TCP SYN Cookies: If you get the message in syslog:  "TCP: request_sock_TCP: Possible SYN flooding on port 9800. Sending cookies.  Check SNMP counters."
+ *    you need to increase syncookies:
+ *
+ *    or disabled them alltogether: sysctl -w net.ipv4.tcp_syncookies=0
+ *
+ *    BEWARE: In my tests, even disabling syncookies did not work, kernel syslog reportet SYN cookie drops anyway
+ *
+ * macOS: ulimit requires -S flag: ulimit -S -n 2048
+ *
+ * nginx:
+ *  * worker_connections setting - on a reverse proxy, this is the SUM of connections, so the limit for websockets
+ *    would be half of the value!
+ *  * worker_rlimit_nofiles - number of files a server process might use - as sockets are file descriptors, this affects
+ *    the sockets too
+ *
+ *
+ */
+
 
 // large random strings are slow as we wait for entropy; for this case we just garbage
 // data to test stuff
@@ -34,6 +61,7 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             let channel2_ready = new AsyncSubject();
             let channel3_ready = new AsyncSubject();
 
+            // TODO random name?!?
             let channel_name = "channel";
 
             pubsub1.start().then(pubsub => {
@@ -159,6 +187,57 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                     channel2.publish(topic, getRandomKilobytes(1));
                 }
             });
+        })
+
+        it("should handle subscription from one thousand clients (tcp sockets) at once with a 1kb publish", function (done) {
+            this.timeout(120000);
+            if (factory.name === "PubSubMicro") {
+                this.skip();
+            }
+            const numClients = 10_000;
+
+            const channelName = randomValidChannelOrTopicName();
+            const topic = randomValidChannelOrTopicName()
+
+            let numClientsOk = numClients;
+            let start: number;
+
+            const onPublishReceived = (n: number) => {
+                if (--numClientsOk === 0) {
+                        const delta = new Date().getTime() - start;
+                        console.info(`Publishing to all clients took: ${delta}ms`)
+                        console.info(`Average publish per socket: ${delta / numClients}ms`)
+                        done();
+                }
+            }
+
+            function subscribeNewClient(channel: string, topic: string, observerFn: any, deferMax: number): Promise<Channel> {
+                const [client] = factory.getLinkedPubSubImplementation(1);
+                client.onStop.then((stopStatus) => {
+                    console.info(`DISCONNECT ${client.clientId} Reason: ${stopStatus.code} ${stopStatus.reason} - ${stopStatus.additionalInfo}`);
+                })
+                return deferMs(0, deferMax)
+                    .then(() => client.start())
+                    .then(() => client.channel(channelName))
+                    .then(chan => chan.subscribe(topic, observerFn).then(() => chan))
+            }
+
+            let clientSubscriptions: Promise<any>[] = [];
+            for (let i = 0; i < numClients; i++) {
+                clientSubscriptions.push(subscribeNewClient(channelName, topic, onPublishReceived, numClients * 1.5))
+            }
+
+            const allClientsSubscribed = Promise.all(clientSubscriptions);
+
+            allClientsSubscribed.then(() => {
+                console.info(`Successfully subscribed ${numClients} clients`);
+                factory.getLinkedPubSubImplementation(1)[0].start().then(ps => {
+                    ps.channel(channelName).then(chan => {
+                        start = new Date().getTime();
+                        chan.publish(topic, getRandomKilobytes(1))
+                    });
+                })
+            })
         })
 
         // requires a server than answers every ping with a pong

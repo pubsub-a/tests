@@ -20,3 +20,15 @@ export const randomValidChannelOrTopicName = function (length?: number) {
 
     return text;
 };
+
+const getRandomInt = (min: number, max: number) => {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+export function deferMs(min: number = 0, max: number = 10000): Promise<any> {
+    return new Promise((resolve) => {
+        setTimeout(resolve, getRandomInt(min, max))
+    })
+}
