@@ -1,8 +1,7 @@
+import { Channel, ImplementationFactory, PubSub, StopStatus } from "@dynalon/pubsub-a-interfaces";
 import { expect } from "chai";
-import { Observable, AsyncSubject, concat, range } from "rxjs";
-
-import { ImplementationFactory, PubSub, Channel, StopStatus } from "@dynalon/pubsub-a-interfaces";
-import { randomString, randomValidChannelOrTopicName, deferMs } from "../test_helper";
+import { AsyncSubject, concat, range } from "rxjs";
+import { deferMs, randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 /**
  * README TUNING
@@ -46,12 +45,23 @@ function getRandomKilobytes(kilobytes: number) {
 
 export const executeHighLoadTests = (factory: ImplementationFactory) => {
 
+    function getNewSocketChannel(channel: string, deferMax: number): Promise<Channel> {
+        const [client] = factory.getLinkedPubSubImplementation(1);
+        client.onStop.then((stopStatus) => {
+            // console.info(`DISCONNECT ${client.clientId} Reason: ${stopStatus.code} ${stopStatus.reason} - ${stopStatus.additionalInfo}`);
+        })
+        return deferMs(0, deferMax)
+            .then(() => client.start())
+            .then(() => client.channel(channel))
+    }
+
     describe(`[${factory.name}] should run the highload test`, () => {
 
         let pubsub1: PubSub, pubsub2: PubSub, pubsub3: PubSub;
         let channel1: Channel, channel2: Channel, channel3: Channel;
         let onClient1Disconnected: AsyncSubject<StopStatus>;
         let onClient2Disconnected: AsyncSubject<StopStatus>;
+
         beforeEach(done => {
             onClient1Disconnected = new AsyncSubject<StopStatus>();
             onClient2Disconnected = new AsyncSubject<StopStatus>();
@@ -175,8 +185,8 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
         it("should handle a single subscription with tenthousand publishes of 1k", function (done) {
             this.timeout(60000);
             const topic = randomValidChannelOrTopicName();
-            let numPublishes = 10000;
-            let numTriggered = 10000;
+            let numPublishes = 10_000;
+            let numTriggered = 10_000;
 
             channel1.subscribe(topic, (payload) => {
                 if (--numTriggered <= 0) {
@@ -189,7 +199,44 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             });
         })
 
-        it("should handle subscription from one thousand clients (tcp sockets) at once with a 1kb publish", function (done) {
+        it("should be possible to subscribe to tenthousand client disconnect events and receive all notifications", function (done) {
+            if (factory.name === "PubSubMicro") {
+                this.skip();
+            }
+            this.timeout(120_000);
+            const numClients = 10_000;
+            const channelName = randomValidChannelOrTopicName();
+
+            let clientsAvailable: Promise<PubSub[]> = new Promise(resolve => {
+                const clients: Promise<PubSub>[] = [];
+                for (let i = 0; i < numClients; i++) {
+                    clients.push(getNewSocketChannel(channelName, numClients * 5).then(chan => chan.pubsub))
+                }
+                Promise.all(clients).then(cl => resolve(cl))
+            })
+
+            let numClientsOk = numClients;
+            const observerFn = () => { --numClientsOk === 0 && done(); }
+
+            clientsAvailable.then(clients => {
+                const client = getNewSocketChannel(channelName, 0).then(chan => {
+                    chan.pubsub.channel("__internal").then(ichan => {
+                        const subscriptions: Promise<any>[] = [];
+                        for (let client of clients) {
+                            subscriptions.push(ichan.publish("SUBSCRIBE_DISCONNECT", client.clientId))
+                        }
+                        const subs_ready = ichan.subscribe("CLIENT_DISCONNECT", observerFn);
+
+                        Promise.all([...subscriptions, subs_ready]).then(() => {
+                            console.info("Got all subscribe disconnect subscriptions")
+                            clients.forEach(c => c.stop({ reason: "LOCAL_DISCONNECT" }))
+                        });
+                    })
+                })
+            })
+        })
+
+        it("should handle subscription from tenthousand clients (tcp sockets) at once with a 1kb publish", function (done) {
             this.timeout(120000);
             if (factory.name === "PubSubMicro") {
                 this.skip();
@@ -202,29 +249,24 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             let numClientsOk = numClients;
             let start: number;
 
-            const onPublishReceived = (n: number) => {
+            const onPublishReceived = function () {
+                const pubsub = this;
                 if (--numClientsOk === 0) {
-                        const delta = new Date().getTime() - start;
-                        console.info(`Publishing to all clients took: ${delta}ms`)
-                        console.info(`Average publish per socket: ${delta / numClients}ms`)
-                        done();
+                    const delta = new Date().getTime() - start;
+                    console.info(`Publishing to all clients took: ${delta}ms`)
+                    console.info(`Average publish per socket: ${delta / numClients}ms`)
+                    done();
                 }
             }
 
-            function subscribeNewClient(channel: string, topic: string, observerFn: any, deferMax: number): Promise<Channel> {
-                const [client] = factory.getLinkedPubSubImplementation(1);
-                client.onStop.then((stopStatus) => {
-                    console.info(`DISCONNECT ${client.clientId} Reason: ${stopStatus.code} ${stopStatus.reason} - ${stopStatus.additionalInfo}`);
-                })
-                return deferMs(0, deferMax)
-                    .then(() => client.start())
-                    .then(() => client.channel(channelName))
+            function subscribeNewClient(channel: string, topic: string, observerFn: any, deferMax: number) {
+                return getNewSocketChannel(channel, deferMax)
                     .then(chan => chan.subscribe(topic, observerFn).then(() => chan))
             }
 
             let clientSubscriptions: Promise<any>[] = [];
             for (let i = 0; i < numClients; i++) {
-                clientSubscriptions.push(subscribeNewClient(channelName, topic, onPublishReceived, numClients * 1.5))
+                clientSubscriptions.push(subscribeNewClient(channelName, topic, onPublishReceived, numClients * 5))
             }
 
             const allClientsSubscribed = Promise.all(clientSubscriptions);
@@ -240,23 +282,6 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
             })
         })
 
-        // requires a server than answers every ping with a pong
-        // it("should play ping pong", function(done) {
-        //     let receivedPongs = 10000;
-        //     let numPings = 10000;
-        //     let payload = randomString(5 * 1024);
-        //     this.timeout(60000);
 
-        //     pubsub1.channel("pingpong", chan => {
-        //         chan.subscribe("pong", p => {
-        //             if(--receivedPongs <= 0)
-        //                 done();
-        //             else
-        //                 chan.publish("ping", payload);
-        //         }).then(() => {
-        //             chan.publish("ping", payload);
-        //         });
-        //     });
-        // })
     });
 };

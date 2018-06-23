@@ -53,6 +53,19 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
 
         })
 
+        // TODO this is ugly - validation-wrapper is mixed with unvalidated original pubsub!
+        it("should resolve with the pubsub instance in the .start() promise", done => {
+            pubsub.start().then(p => {
+                // TODO / sucks: We return a validation wrapper, so the instances are not equal!
+                expect(p).to.be.ok;
+                expect(p.channel).to.be.a("function");
+                expect(p.clientId).to.be.a("string");
+                // TODO when using p this fails - validation madness!
+                expect(pubsub.isStarted).to.equal(true);
+                done();
+            }).catch(err => done(err));
+        })
+
         it("should set the onStop promise after the creation of the pubsub constructor is done", () => {
             expect(pubsub.onStop).to.be.ok;
         })
