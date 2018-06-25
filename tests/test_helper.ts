@@ -32,3 +32,16 @@ export function deferMs(min: number = 0, max: number = 10000): Promise<any> {
         setTimeout(resolve, getRandomInt(min, max))
     })
 }
+
+// large random strings are slow as we wait for entropy; for this case we just garbage
+// data to test stuff
+const rs = randomString(1024);
+export function getRandomKilobytes(kilobytes: number) {
+    let str = "";
+    let i = 1;
+    while (i <= kilobytes) {
+        str += rs;
+        i++;
+    }
+    return str;
+}
