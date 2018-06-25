@@ -55,10 +55,11 @@ function runTests() {
         executeDisconnectTests(factory);
 
         const runningInCIEnvironment =  typeof process.env['CI'] !== 'undefined';
-        if (!runningInCIEnvironment) {
+        const runningInBrowser = typeof window !== 'undefined';
+        if (!runningInCIEnvironment && !runningInBrowser) {
             executeHighLoadTests(factory);
         } else {
-            console.info("Skipping high load tests as I am running in a CI environment")
+            console.info("Skipping high load tests as I am running in a CI environment or Browser")
         }
     });
 }

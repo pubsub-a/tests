@@ -6,7 +6,7 @@ interface LoadTestOptions {
 }
 
 export let defaultLoadTestOptions: LoadTestOptions = {
-    numClients: 8192,
+    numClients: 10_000,
     socketsPerSecond: 100,
 }
 
