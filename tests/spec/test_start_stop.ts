@@ -44,7 +44,7 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
                 });
         })
 
-        it("should set isStarted from true to false after the instance is started", done => {
+        it("should set isStarted immediatelly from true to false after the instance is started", done => {
             expect(pubsub.isStarted).to.equal(false);
             pubsub.start().then(() => {
                 expect(pubsub.isStarted).to.equal(true);
@@ -53,17 +53,20 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
 
         })
 
-        // TODO this is ugly - validation-wrapper is mixed with unvalidated original pubsub!
         it("should resolve with the pubsub instance in the .start() promise", done => {
             pubsub.start().then(p => {
-                // TODO / sucks: We return a validation wrapper, so the instances are not equal!
                 expect(p).to.be.ok;
                 expect(p.channel).to.be.a("function");
                 expect(p.clientId).to.be.a("string");
-                // TODO when using p this fails - validation madness!
+                expect(p.clientId).to.equal(pubsub.clientId);
+                expect(p.isStarted).to.equal(true);
                 expect(pubsub.isStarted).to.equal(true);
                 done();
             }).catch(err => done(err));
+        })
+
+        it("should not allow to stop an instance before it was started", () => {
+            expect(() => pubsub.stop()).to.throw();
         })
 
         it("should set the onStop promise after the creation of the pubsub constructor is done", () => {
@@ -103,7 +106,7 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
             pubsub.start().then(() => pubsub.stop());
         })
 
-        it("should resolve the promise after the pubsub was stopped", (done) => {
+        it("should resolve the returned promise after the pubsub was stopped with .stop()", (done) => {
             pubsub.start()
                 .then(() => pubsub.stop())
                 .then(() => done());
@@ -146,7 +149,9 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
                 expect(status.reason).to.equal("LOCAL_DISCONNECT");
                 done();
             })
-            pubsub.stop({ reason: "LOCAL_DISCONNECT" });
+            pubsub.start().then(() => {
+                pubsub.stop({ reason: "LOCAL_DISCONNECT" });
+            })
         })
     });
 }

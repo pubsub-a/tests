@@ -5,6 +5,7 @@ import { executeDisposeAndCleanupTests } from "./spec/test_dispose_and_cleanup";
 import { executeLinkedPubSubTests } from "./spec/test_linked_pubsub";
 import { executeStartStopTests } from "./spec/test_start_stop";
 import { executeHighLoadTests } from "./spec/test_highload";
+import { executeHighloadSocketTests } from "./spec/test_highload_sockets";
 import { executeValidationTests } from "./spec/test_validation";
 
 import { PubSub, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
@@ -54,12 +55,18 @@ function runTests() {
         executeDisposeAndCleanupTests(factory);
         executeDisconnectTests(factory);
 
-        const runningInCIEnvironment =  typeof process.env['CI'] !== 'undefined';
-        const runningInBrowser = typeof window !== 'undefined';
-        if (!runningInCIEnvironment && !runningInBrowser) {
+        const runningInCIEnvironment = typeof process.env['CI'] !== 'undefined';
+        if (!runningInCIEnvironment) {
             executeHighLoadTests(factory);
+
+            const runningInBrowser = typeof window !== 'undefined';
+            if (!runningInBrowser) {
+                executeHighloadSocketTests(factory);
+            } else {
+                console.info("Skipping high load sockets tests as I am running inside a browser")
+            }
         } else {
-            console.info("Skipping high load tests as I am running in a CI environment or Browser")
+            console.info("Skipping high load tests as I am running in a CI environment")
         }
     });
 }

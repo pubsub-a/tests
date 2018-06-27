@@ -71,7 +71,6 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should be able to subscribe to a disconnect event from other clients", function (done) {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal").then(internalChannel => {
-                // TODO is the payload format correct?!?
                 internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     expect(clientUuid).to.equal(id2);
                     done();

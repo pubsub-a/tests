@@ -31,5 +31,9 @@
     "browser-tests": "karma start",
     "test": "npm run build && npm run bundle && npm run node-tests && npm run browser-tests"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@types/lodash": "^4.14.110",
+    "ipterate": "^1.1.1",
+    "lodash": "^4.17.10"
+  }
 }
