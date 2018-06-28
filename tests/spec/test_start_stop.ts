@@ -185,11 +185,13 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
 
         const getPubSub = (options: any) => (factory.getLinkedPubSubImplementation as any)(1, options)[0];
 
-        it("should reject the start promise if no server is reachable at target url", done => {
-
+        it("should reject the start promise if no server is reachable at target url", function(done) {
+            // Browser seems to take longer?
+            this.timeout(45_000)
             const pubsub = getPubSub({
-                serverUrl: "http://localhost:6668"
+                serverUrl: "http://127.0.0.1:6668"
             });
+
             pubsub.start()
                 .then(() => done("Error: promise shouldn't resolve"))
                 .catch((err) => {
@@ -197,15 +199,15 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
                     expect(err).to.be.ok;
                     expect(err.reason).to.be.a("string");
                     expect(err.code).to.be.a("number");
-                    expect(err.additionalInfo).to.be.a("string");
                     expect(err.code).to.equal(500);
                     done();
                 })
         })
 
         it("should not trigger the onStop promise if the initial connect fails", done => {
+            this.timeout(45_000)
             const pubsub = getPubSub({
-                serverUrl: "http://localhost:6668"
+                serverUrl: "http://127.0.0.1:6668",
             })
 
             pubsub.onStop.then(() => {
