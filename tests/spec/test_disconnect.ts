@@ -21,12 +21,13 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
     let channel1: Channel, channel2: Channel;
     let id1: string, id2: string;
 
+    // PubSubMicro has no disconnect logic
+    if (factory.name == "PubSubMicro") {
+        console.info("NOT EXECUTING TESTS: PubSubMicro does not support disconnect logic yet");
+        return;
+    }
+
     describe(`[${factory.name}] should pass remote-end disconnect event tests [INSTRUMENTATION REQUIRED]`, function () {
-        // PubSubMicro has no disconnect logic
-        if (factory.name == "PubSubMicro") {
-            console.info("NOT EXECUTING TESTS: PubSubMicro does not support disconnect logic yet");
-            return;
-        }
 
         beforeEach(() => {
             [pubsub1, pubsub2] = factory.getLinkedPubSubImplementation(2);

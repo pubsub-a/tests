@@ -1,27 +1,27 @@
 import { expect } from "chai";
 import { Observable } from "rxjs";
 
-import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { ImplementationFactory, PubSub } from "@dynalon/pubsub-a-interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeStartStopTests = (factory: ImplementationFactory) => {
 
     describe(`['${factory.name}] should pass the start/stop implementation test`, () => {
 
-        let pubsub;
-        let topic;
-        let channel_name;
+        let pubsub: PubSub;
+        let topic: string;
+        let channelName: string;
 
         let start_and_create_channel = () => {
             return pubsub.start().then(() => {
-                return pubsub.channel(channel_name);
+                return pubsub.channel(channelName);
             });
         };
 
         beforeEach(() => {
             pubsub = factory.getPubSubImplementation();
             topic = randomValidChannelOrTopicName();
-            channel_name = randomValidChannelOrTopicName();
+            channelName = randomValidChannelOrTopicName();
         });
 
         it("should set a clientId after start() is done via promise", function (done) {
@@ -84,6 +84,28 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
             })
         })
 
+        it("should set a default status of LOCAL_DISCONNECT when .stop() is called without arguments and set a statuscode of 0", done => {
+            pubsub.start().then(() => {
+                pubsub.onStop.then(status => {
+                    expect(status.reason).to.equal("LOCAL_DISCONNECT");
+                    expect(status.code).to.equal(0);
+                    done();
+                })
+                pubsub.stop();
+            })
+        })
+
+        it("should be possible to manually set a stop status in .stop() and receive in in onStop", done => {
+            pubsub.start().then(() => {
+                pubsub.onStop.then(status => {
+                    expect(status.reason).to.equal("UNSPECIFIED_ERROR")
+                    expect(status.code).to.equal(498);
+                    done();
+                })
+                pubsub.stop({ reason: "UNSPECIFIED_ERROR", code: 498 })
+            })
+        })
+
         it("should throw an error if calling start() again after the stop() function", (done) => {
             pubsub.start()
                 .then(() => pubsub.stop())
@@ -136,7 +158,7 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
 
         it("should reject the promise when creating a channel if the .stop function has been called", done => {
             start_and_create_channel().then(channel => {
-                pubsub.stop().then(() => pubsub.channel(topic, () => void 0))
+                pubsub.stop().then(() => pubsub.channel(topic))
                     .catch(err => {
                         expect(err).to.be.an.instanceOf(Error);
                         done();
@@ -154,4 +176,43 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
             })
         })
     });
+
+    if (factory.name !== "PubSubNodeClient") {
+        return;
+    }
+
+    describe("additional start/stop tests for node-client", function () {
+
+        const getPubSub = (options: any) => (factory.getLinkedPubSubImplementation as any)(1, options)[0];
+
+        it("should reject the start promise if no server is reachable at target url", done => {
+
+            const pubsub = getPubSub({
+                serverUrl: "http://localhost:6668"
+            });
+            pubsub.start()
+                .then(() => done("Error: promise shouldn't resolve"))
+                .catch((err) => {
+                    // expect(err).to.be.an.instanceOf(Error);
+                    expect(err).to.be.ok;
+                    expect(err.reason).to.be.a("string");
+                    expect(err.code).to.be.a("number");
+                    expect(err.additionalInfo).to.be.a("string");
+                    expect(err.code).to.equal(500);
+                    done();
+                })
+        })
+
+        it("should not trigger the onStop promise if the initial connect fails", done => {
+            const pubsub = getPubSub({
+                serverUrl: "http://localhost:6668"
+            })
+
+            pubsub.onStop.then(() => {
+                done("Error: onStop should not have been called");
+            });
+
+            pubsub.start().catch(() => done());
+        })
+    })
 }
