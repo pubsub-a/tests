@@ -195,11 +195,11 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
             pubsub.start()
                 .then(() => done("Error: promise shouldn't resolve"))
                 .catch((err) => {
-                    // expect(err).to.be.an.instanceOf(Error);
                     expect(err).to.be.ok;
-                    expect(err.reason).to.be.a("string");
-                    expect(err.code).to.be.a("number");
-                    expect(err.code).to.equal(500);
+                    expect(err.status).to.be.ok;
+                    expect(err.status.reason).to.be.a("string");
+                    expect(err.status.code).to.be.a("number");
+                    expect(err.status.code).to.equal(500);
                     done();
                 })
         })
