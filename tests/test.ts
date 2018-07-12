@@ -1,14 +1,14 @@
+import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
 import { executeChannelTests } from "./spec/test_channels";
 import { executeCommonBasicPubSubTests } from "./spec/test_common_basic_pubsub";
 import { executeDisconnectTests } from "./spec/test_disconnect";
 import { executeDisposeAndCleanupTests } from "./spec/test_dispose_and_cleanup";
-import { executeLinkedPubSubTests } from "./spec/test_linked_pubsub";
-import { executeStartStopTests } from "./spec/test_start_stop";
 import { executeHighLoadTests } from "./spec/test_highload";
 import { executeHighloadSocketTests } from "./spec/test_highload_sockets";
+import { executeLinkedPubSubTests } from "./spec/test_linked_pubsub";
+import { executeStartStopTests } from "./spec/test_start_stop";
 import { executeValidationTests } from "./spec/test_validation";
-
-import { PubSub, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { executeSocketIOTests } from "./spec/test_socketio";
 
 const factories: Array<ImplementationFactory> = [];
 
@@ -54,6 +54,8 @@ function runTests() {
         executeLinkedPubSubTests(factory);
         executeDisposeAndCleanupTests(factory);
         executeDisconnectTests(factory);
+
+        executeSocketIOTests(factory);
 
         const runningInCIEnvironment = typeof process.env['CI'] !== 'undefined';
         if (!runningInCIEnvironment) {

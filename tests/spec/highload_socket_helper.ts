@@ -12,7 +12,7 @@ interface LoadTestOptions {
 
 export let defaultLoadTestOptions: LoadTestOptions = {
     numClients: 10_000,
-    socketsPerSecond: 200
+    socketsPerSecond: 100
 }
 
 function getIpAddressList(range: string) {

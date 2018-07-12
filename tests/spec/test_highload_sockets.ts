@@ -49,6 +49,9 @@ import { once } from "lodash";
  *  * worker_rlimit_nofiles - number of files a server process might use - as sockets are file descriptors, this affects
  *    the sockets too
  *
+ * Usefull for debugging: See sockets in TIME_WAIT state for port 9800:
+ *
+ *    netstat -an |grep 9800|grep TIME_WAIT|wc -l
  *
  */
 export const executeHighloadSocketTests = (factory: ImplementationFactory) => {
@@ -69,6 +72,9 @@ export const executeHighloadSocketTests = (factory: ImplementationFactory) => {
     }
 
     describe(`[${factory.name}] should run highload test with real and lots of sockets`, () => {
+        if (factory.name === "PubSubMicro") {
+            return;
+        }
 
         let channelName: string;
         let topic: string;
@@ -78,11 +84,14 @@ export const executeHighloadSocketTests = (factory: ImplementationFactory) => {
             topic = randomValidChannelOrTopicName();
         })
 
+        afterEach((done) => {
+            // closed sockets are still occupying a source port until TIME_WAIT period has passed
+            // so it makes sense to wait after each highload test to ensure we don't run out of source ports
+            setTimeout(30_000, done)
+        })
+
         it("should be possible to subscribe to tenthousand client disconnect events and receive all notifications", function (done) {
-            if (factory.name === "PubSubMicro") {
-                this.skip();
-            }
-            this.timeout(120_000);
+            this.timeout(5 * 60 * 1000);
             const channelName = randomValidChannelOrTopicName();
 
             const cluster = new ClientCluster(factory);
@@ -113,10 +122,8 @@ export const executeHighloadSocketTests = (factory: ImplementationFactory) => {
         })
 
         it("should handle subscription from tenthousand clients (tcp sockets) at once with a 1kb publish", function (done) {
-            this.timeout(15 * 60 * 1000);
-            if (factory.name === "PubSubMicro") {
-                this.skip();
-            }
+            this.timeout(5 * 60 * 1000);
+
             const cluster = new ClientCluster(factory);
             let numPublishesReceived = cluster.options.numClients;
             let start: number;
