@@ -66,7 +66,6 @@ export class ClientCluster {
     }
 
     subscribeClients<T>(channelName: string, topic: string, observer: ObserverFunc<T>): Promise<SubscriptionToken[]> {
-        console.info("subsing");
         return Promise.all(this.clients.map(client => client.channel(channelName)))
             .then(channels => Promise.all(channels.map(chan => chan.subscribe(topic, observer))))
     }
