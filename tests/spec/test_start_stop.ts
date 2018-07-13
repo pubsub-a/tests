@@ -186,7 +186,7 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
         const getPubSub = (options: any) => (factory.getLinkedPubSubImplementation as any)(1, options)[0];
 
         it("should reject the start promise if no server is reachable at target url", function(done) {
-            // Browser seems to take longer?
+            // Browser seems to take longer to timeout?
             this.timeout(45_000)
             const pubsub = getPubSub({
                 serverUrl: "http://127.0.0.1:6668"

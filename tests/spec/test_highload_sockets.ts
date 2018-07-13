@@ -84,10 +84,11 @@ export const executeHighloadSocketTests = (factory: ImplementationFactory) => {
             topic = randomValidChannelOrTopicName();
         })
 
-        afterEach((done) => {
+        afterEach(function(done) {
+            this.timeout(60_000)
             // closed sockets are still occupying a source port until TIME_WAIT period has passed
             // so it makes sense to wait after each highload test to ensure we don't run out of source ports
-            setTimeout(30_000, done)
+            setTimeout(done, 30_000)
         })
 
         it("should be possible to subscribe to tenthousand client disconnect events and receive all notifications", function (done) {

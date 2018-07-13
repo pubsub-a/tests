@@ -2,7 +2,7 @@ import { ImplementationFactory, ObserverFunc, PubSub, SubscriptionToken } from "
 import { getRandomInt } from "../test_helper";
 import * as ipterate from "ipterate";
 import { Client } from "@dynalon/pubsub-a-server-node";
-import  { once } from "lodash";
+import { once } from "lodash";
 
 interface LoadTestOptions {
     numClients: number
@@ -95,8 +95,11 @@ export class ClientCluster {
 
             const client = new Client({
                 serverUrl: "http://localhost:9800",
-                forceNew: true,
-                localAddress
+                socketOptions: {
+                    transports: ["websocket"],
+                    forceNew: true,
+                    localAddress
+                }
             })
             clients.push(client);
         }
@@ -114,6 +117,9 @@ export class ClientCluster {
         }
     }
 
+    /**
+     * If clients start to fail just display the error of the first failing client
+     */
     private logErrorOnce = once(msg => console.info(msg))
 
     private connectClientDelayed(client: PubSub, delay: number) {
