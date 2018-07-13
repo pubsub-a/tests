@@ -1,6 +1,9 @@
 import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { Message, TOPICS } from "@dynalon/pubsub-a-server-node/dist/common";
+import "chai";
+import { expect } from "chai";
 import * as socketio from "socket.io-client";
-import { TOPICS, Message } from "@dynalon/pubsub-a-server-node/dist/common"
+const URL = require("url").URL;
 
 // these are not strictly pubsub-a tests, but put them here anyways in order to avoid a separate project
 export const executeSocketIOTests = (factory: ImplementationFactory) => {
@@ -20,7 +23,7 @@ export const executeSocketIOTests = (factory: ImplementationFactory) => {
 
     };
 
-    const url = "http://localhost:9800";
+    const url = process.env["PUBSUB_SERVER_URL"]  || "http://localhost:9800";
 
     describe("socket.io Tests", () => {
 
@@ -52,7 +55,7 @@ export const executeSocketIOTests = (factory: ImplementationFactory) => {
         it("should not kill the server when publishing garbage", done => {
             const socket = socketio(url, defaultOptions);
 
-            const message = { channel: { foo: "bar"}, topic: { bla: "blubb"}, payload: [ new ArrayBuffer(5) ] }
+            const message = { channel: { foo: "bar" }, topic: { bla: "blubb" }, payload: [new ArrayBuffer(5)] }
             socket.emit(TOPICS.PUBLISH, message);
             socket.emit(TOPICS.SUBSCRIBE, message);
             socket.emit(TOPICS.UNSUBSCRIBE, message);
@@ -64,8 +67,25 @@ export const executeSocketIOTests = (factory: ImplementationFactory) => {
             socket.emit(TOPICS.CONFIGURATION, message);
 
             setTimeout(() => {
+                socket.disconnect();
                 done()
             }, 100)
+
+        })
+
+        it(`should return a valid url in configuration - using ${url} for connect`, done => {
+            const socket = socketio(url, defaultOptions);
+            socket.on(TOPICS.CONFIGURATION, msg => {
+                expect(msg.publicUrl).to.be.a("string");
+                expect(msg.publicUrl).to.have.length.greaterThan(0)
+
+                const returnedUrl = new URL(msg.publicUrl);
+                const connectUrl = new URL(url);
+                expect(returnedUrl.origin).to.equal(connectUrl.origin)
+
+                socket.disconnect();
+                done();
+            })
 
         })
     })

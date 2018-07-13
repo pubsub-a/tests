@@ -1,10 +1,7 @@
+import { Channel, ImplementationFactory, PubSub } from "@dynalon/pubsub-a-interfaces";
 import { expect } from "chai";
-import { Observable, from, zip } from "rxjs";
-
-import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
-import { PubSub, Channel } from "@dynalon/pubsub-a-interfaces";
-
-import { randomValidChannelOrTopicName } from "../test_helper";
+import { from, zip } from "rxjs";
+import { randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeChannelTests = (factory: ImplementationFactory) => {
     let pubsub: PubSub;
