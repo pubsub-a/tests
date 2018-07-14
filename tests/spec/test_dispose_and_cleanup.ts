@@ -84,7 +84,7 @@ export const executeDisposeAndCleanupTests = (factory: ImplementationFactory) =>
             });
         });
 
-        it('should throw an exception if the subscription is already disposed', () => {
+        it('should not throw an exception if the subscription is already disposed', () => {
             const channel_name = randomValidChannelOrTopicName();
             return pubsub.channel(channel_name).then(chan => {
 
@@ -92,7 +92,7 @@ export const executeDisposeAndCleanupTests = (factory: ImplementationFactory) =>
                     expect(subscription.isDisposed).to.be.false;
                     subscription.dispose();
                     expect(subscription.isDisposed).to.be.true;
-                    expect(() => subscription.dispose()).to.throw();
+                    expect(() => subscription.dispose()).not.to.throw();
                 });
 
             });
