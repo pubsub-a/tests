@@ -73,7 +73,11 @@ export const executeSocketIOTests = (factory: ImplementationFactory) => {
 
         })
 
-        it(`should return a valid url in configuration - using ${url} for connect`, done => {
+        it(`should return a valid url in configuration - using ${url} for connect`, function(done) {
+            // URL is not available in browser
+            if (typeof window !== 'undefined')
+                this.skip();
+
             const socket = socketio(url, defaultOptions);
             socket.on(TOPICS.CONFIGURATION, msg => {
                 expect(msg.publicUrl).to.be.a("string");
