@@ -58,17 +58,21 @@ function runTests() {
         executeSocketIOTests(factory);
 
         const runningInCIEnvironment = typeof process.env['CI'] !== 'undefined';
-        if (!runningInCIEnvironment) {
+        const runHighloadTests = typeof process.env['HIGHLOAD'] !== 'undefined';
+        const runningInBrowser = typeof window !== 'undefined';
+
+        // highload tests are only run when HIGHLOAD env variable is set and we are NOT a CI system (since the
+        // number of sockets and required bandwidth/load would disturb most cloud providers)
+        if (runHighloadTests && !runningInCIEnvironment) {
             executeHighLoadTests(factory);
 
-            const runningInBrowser = typeof window !== 'undefined';
             if (!runningInBrowser) {
                 executeHighloadSocketTests(factory);
             } else {
-                console.info("Skipping high load sockets tests as I am running inside a browser")
+                console.info("Not running high load sockets tests as I am running inside a browser")
             }
         } else {
-            console.info("Skipping high load tests as I am running in a CI environment")
+            console.info("Not running High load tests")
         }
     });
 }

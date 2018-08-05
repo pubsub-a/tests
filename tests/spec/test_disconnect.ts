@@ -1,12 +1,6 @@
+import { ImplementationFactory, PubSub } from "@dynalon/pubsub-a-interfaces";
 import { expect } from "chai";
-import { Observable, Subscription } from "rxjs";
-
-import {
-    ImplementationFactory, InternalChannelTopic, PubSub, Channel, InternalChannel
-} from "@dynalon/pubsub-a-interfaces";
-
-import { randomString, randomValidChannelOrTopicName } from "../test_helper";
-import { disconnect } from "cluster";
+import { randomString } from "../test_helper";
 
 export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
@@ -18,7 +12,6 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
     };
 
     let pubsub1: PubSub, pubsub2: PubSub;
-    let channel1: Channel, channel2: Channel;
     let id1: string, id2: string;
 
     // PubSubMicro has no disconnect logic
@@ -29,26 +22,15 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
     describe(`[${factory.name}] should pass remote-end disconnect event tests [INSTRUMENTATION REQUIRED]`, function () {
 
-        beforeEach(() => {
+        beforeEach(async () => {
             [pubsub1, pubsub2] = factory.getLinkedPubSubImplementation(2);
 
-            const channel_name = randomValidChannelOrTopicName();
+            await pubsub1.start();
+            id1 = pubsub1.clientId;
 
-            const channel1_ready = pubsub1.start().then(pubsub => {
-                id1 = pubsub1.clientId;
-                return pubsub1.channel(channel_name).then((chan) => {
-                    channel1 = chan;
-                });
-            });
+            await pubsub2.start();
+            id2 = pubsub2.clientId;
 
-            const channel2_ready = pubsub2.start().then(pubsub => {
-                id2 = pubsub2.clientId;
-                return pubsub2.channel(channel_name).then((chan) => {
-                    channel2 = chan;
-                });
-            });
-
-            return Promise.all([channel1_ready, channel2_ready]);
         });
 
 
@@ -62,7 +44,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                     internalChannel1.subscribe("CLIENT_DISCONNECT", failure),
                 ]).then(() => {
                     pubsub2.channel("__internal").then(internalChannel2 => {
-                        expect(() => internalChannel2.publish("CLIENT_DISCONNECT", id2 as any)).to.throw();
+                        expect(() => internalChannel2.publish("CLIENT_DISCONNECT", id2)).to.throw();
                         setTimeout(() => done(), 100)
                     })
                 })
@@ -76,17 +58,19 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                     expect(clientUuid).to.equal(id2);
                     done();
                 }).then(() => {
-                    disconnectClient(pubsub1, id2);
-                    setTimeout(() => done(), 100);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2).then(() => {
+                        disconnectClient(pubsub1, id2);
+                    })
                 })
             });
         });
 
+
         it("should not trigger a disconnect event when we unsubscribed from it", function (done) {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal").then(internalChannel => {
-                internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any).then(() => {
-                    return internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2 as any)
+                internalChannel.publish("SUBSCRIBE_DISCONNECT", id2).then(() => {
+                    return internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2)
                 }).then(() => {
                     disconnectClient(pubsub1, id2);
                     setTimeout(() => done(), 100)
@@ -105,7 +89,7 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                     });
                 }
                 const subscribeToClient2Disconnect = () => {
-                    return internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
+                    return internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
                 }
                 Promise.all([
                     subscribeToAllDisconnects(),
@@ -124,8 +108,8 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should call the InternalChannelMessage callback even when we are already subscribed", function (done) {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__internal").then(internalChannel => {
-                return internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any).then(() => {
-                    return internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any).then(() => {
+                return internalChannel.publish("SUBSCRIBE_DISCONNECT", id2).then(() => {
+                    return internalChannel.publish("SUBSCRIBE_DISCONNECT", id2).then(() => {
                         done();
                     });
                 })
@@ -144,21 +128,21 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
             });
         });
 
-        it("should only unsubscribe from disconnect events when unsubscribe_disconnect is called exactly the same time as subscribe_disconnect", done => {
+        it("should only unsubscribe from disconnect events when unsubscribe_disconnect is called exactly the same number of times as subscribe_disconnect", done => {
             pubsub1.channel("__internal").then(internalChannel => {
                 internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     done("Error: shouldnt receive a disconnect event");
                 }).then(() => {
-                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
-                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
-                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
-                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
 
                     setTimeout(() => {
-                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2 as any);
-                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2 as any);
-                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2 as any);
-                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2 as any);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
                         setTimeout(() => disconnectClient(pubsub1, id2), 250);
                         setTimeout(done, 500);
                     }, 1000);
@@ -171,15 +155,15 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
                 internalChannel.subscribe("CLIENT_DISCONNECT", (clientUuid) => {
                     done();
                 }).then(() => {
-                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
-                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
-                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
-                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2 as any);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                    internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
 
                     setTimeout(() => {
-                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2 as any);
-                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2 as any);
-                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2 as any);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                        internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
                         setTimeout(() => disconnectClient(pubsub1, id2), 250)
                     }, 500);
                 });

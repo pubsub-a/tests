@@ -1,8 +1,6 @@
-import { expect } from "chai";
-import { Observable } from "rxjs";
-
 import { ImplementationFactory, PubSub } from "@dynalon/pubsub-a-interfaces";
-import { randomString, randomValidChannelOrTopicName } from "../test_helper";
+import { expect } from "chai";
+import { randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeStartStopTests = (factory: ImplementationFactory) => {
 
@@ -175,6 +173,18 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
                 pubsub.stop({ reason: "LOCAL_DISCONNECT" });
             })
         })
+
+        // TODO decide if this is a good idea or should be left to upper layers
+        it.skip("should call the .dispose() on the subscription token if the pubsub instance stops", (done) => {
+            start_and_create_channel().then(channel => {
+                channel.subscribe(topic, () => void 0).then(token => {
+                    token.add(() => {
+                        done();
+                    })
+                    pubsub.stop();
+                })
+            })
+        })
     });
 
     if (factory.name !== "PubSubNodeClient") {
@@ -185,7 +195,7 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
 
         const getPubSub = (options: any) => (factory.getLinkedPubSubImplementation as any)(1, options)[0];
 
-        it("should reject the start promise if no server is reachable at target url", function(done) {
+        it("should reject the start promise if no server is reachable at target url", function (done) {
             // Browser seems to take longer to timeout?
             this.timeout(45_000)
             const pubsub = getPubSub({
