@@ -6,9 +6,7 @@ import { PubSub, Channel, ImplementationFactory } from "@pubsub-a/interfaces";
 import { randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) => {
-
     describe(`["${factory.name}] should pass the common PubSub implementation tests `, () => {
-
         let pubsub: PubSub;
         let channel: Channel;
 
@@ -23,7 +21,7 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             });
         });
 
-        it("should accept a subscription and fire it when published", (done) => {
+        it("should accept a subscription and fire it when published", done => {
             const topic = "myTopic";
             const subscriptionFunction = (n: number) => {
                 expect(n).to.equal(1);
@@ -35,22 +33,21 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             });
         });
 
-        it("should handle multiple subscriptions in parallel", (done) => {
-            let count1 = 0, count2 = 0;
+        it("should handle multiple subscriptions in parallel", done => {
+            let count1 = 0,
+                count2 = 0;
             let promise1 = new AsyncSubject();
             let promise2 = new AsyncSubject();
             let num_additions = 100;
 
-            let p1 = channel.subscribe<number>("topic1", (value) => {
+            let p1 = channel.subscribe<number>("topic1", value => {
                 count1 += value;
-                if (count1 >= num_additions)
-                    promise1.complete();
+                if (count1 >= num_additions) promise1.complete();
             });
 
-            let p2 = channel.subscribe<number>("topic2", (value) => {
+            let p2 = channel.subscribe<number>("topic2", value => {
                 count2 += value;
-                if (count2 >= num_additions)
-                    promise2.complete();
+                if (count2 >= num_additions) promise2.complete();
             });
 
             Promise.all([p1, p2]).then(() => {
@@ -79,25 +76,31 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             publishReceived.pipe(take(2), toArray()).subscribe(() => done());
         });
 
-        it("should fire each subscription only once if multiple subscriptions are available", (done) => {
+        it("should fire each subscription only once if multiple subscriptions are available", done => {
             let count = 0;
 
             const publishReceived = new Subject<void>();
 
             zip(
-                channel.subscribe("topic", () => { count += 1; publishReceived.next(); }),
-                channel.subscribe("topic", () => { count += 1000; publishReceived.next(); }),
+                channel.subscribe("topic", () => {
+                    count += 1;
+                    publishReceived.next();
+                }),
+                channel.subscribe("topic", () => {
+                    count += 1000;
+                    publishReceived.next();
+                })
             ).subscribe(() => {
                 channel.publish("topic", true);
-            })
+            });
 
             publishReceived.pipe(take(2), toArray()).subscribe(() => {
                 expect(count).to.equal(1001);
                 done();
-            })
+            });
         });
 
-        it("should execute the subscriptions in the order they were added", (done) => {
+        it("should execute the subscriptions in the order they were added", done => {
             const sequence = new Subject();
 
             sequence.pipe(take(3), toArray()).subscribe(result => {
@@ -112,9 +115,9 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             Promise.all([p1, p2, p3]).then(() => channel.publish("myTopic", 1));
         });
 
-        it("should fire a subscription if it is registered with .once()", (done) => {
+        it("should fire a subscription if it is registered with .once()", done => {
             const topic = randomValidChannelOrTopicName();
-            const promise = channel.once(topic, (payload) => {
+            const promise = channel.once(topic, payload => {
                 expect(payload).to.equal("foo");
                 done();
             });
@@ -124,14 +127,13 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             });
         });
 
-
-        it("should fire a subscription only once if it is registered with .once()", (done) => {
+        it("should fire a subscription only once if it is registered with .once()", done => {
             const topic = randomValidChannelOrTopicName();
             let counter = 0;
-            const promise = channel.once(topic, (payload) => {
+            const promise = channel.once(topic, payload => {
                 expect(payload).to.equal("foo");
                 expect(counter).to.equal(0);
-                counter++
+                counter++;
                 done();
             });
 
@@ -158,15 +160,19 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
 
             return Promise.all([promise1, promise2, promise3]).then(tokens => {
                 const [token1, token2, token3] = tokens as any;
-                return token1.dispose().then(count => {
-                    expect(count).to.equal(2);
-                    return token2.dispose();
-                }).then(count => {
-                    expect(count).to.equal(1);
-                    return token3.dispose();
-                }).then(count => {
-                    expect(count).to.equal(0);
-                });
+                return token1
+                    .dispose()
+                    .then(count => {
+                        expect(count).to.equal(2);
+                        return token2.dispose();
+                    })
+                    .then(count => {
+                        expect(count).to.equal(1);
+                        return token3.dispose();
+                    })
+                    .then(count => {
+                        expect(count).to.equal(0);
+                    });
             });
         });
 
@@ -174,7 +180,7 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             const topic = randomValidChannelOrTopicName();
             const subscriber = () => {
                 throw new Error("Expected error");
-            }
+            };
 
             channel.subscribe(topic, subscriber).then(() => {
                 try {
@@ -201,4 +207,4 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             });
         });
     });
-}
+};

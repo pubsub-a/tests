@@ -8,7 +8,6 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
     let pubsub: PubSub;
 
     describe(`[${factory.name} Channel name tests`, () => {
-
         beforeEach(done => {
             pubsub = factory.getPubSubImplementation();
             pubsub.start().then(() => done());
@@ -21,18 +20,22 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
             expect(() => invalidPubSub.channel(null)).to.throw();
             expect(() => invalidPubSub.channel({})).to.throw();
             expect(() => invalidPubSub.channel([])).to.throw();
-            expect(() => invalidPubSub.channel(['a'])).to.throw();
+            expect(() => invalidPubSub.channel(["a"])).to.throw();
         });
 
-        it("should make sure a channel name can consist of valid characters and be between 1 to 63 characters long", (done) => {
+        it("should make sure a channel name can consist of valid characters and be between 1 to 63 characters long", done => {
             let channel_generation = (length: number) => {
                 const channel_name = randomValidChannelOrTopicName(length);
                 pubsub.channel(channel_name);
             };
 
-            range(1, 63).subscribe(length => {
-                expect(() => channel_generation(length)).not.to.throw();
-            }, undefined, done);
+            range(1, 63).subscribe(
+                length => {
+                    expect(() => channel_generation(length)).not.to.throw();
+                },
+                undefined,
+                done
+            );
         });
 
         it("should make sure a channel name may not be longer than 63 characters", () => {
@@ -71,7 +74,7 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
             pubsub = factory.getPubSubImplementation();
             let randomChannelName = randomValidChannelOrTopicName();
             pubsub.start().then(() => {
-                pubsub.channel(randomChannelName).then((chan) => {
+                pubsub.channel(randomChannelName).then(chan => {
                     channel = chan;
                     done();
                 });
@@ -80,21 +83,41 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
 
         it("should make sure a topic can only be of type string", () => {
             const invalidChannel: any = channel;
-            expect(() => invalidChannel.publish(undefined, "foo")).to.throw().and.be.an.instanceOf(Error);
-            expect(() => invalidChannel.publish(null, "foo")).to.throw().and.be.an.instanceOf(Error);
-            expect(() => invalidChannel.publish({}, "foo")).to.throw().and.be.an.instanceOf(Error);
-            expect(() => invalidChannel.publish([], "foo")).to.throw().and.be.an.instanceOf(Error);
-            expect(() => invalidChannel.publish(['a'], "foo")).to.throw().and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.publish(undefined, "foo"))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.publish(null, "foo"))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.publish({}, "foo"))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.publish([], "foo"))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.publish(["a"], "foo"))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
 
             const empty = () => void 0;
-            expect(() => invalidChannel.subscribe(undefined, empty)).to.throw().and.be.an.instanceOf(Error);
-            expect(() => invalidChannel.subscribe(null, empty)).to.throw().and.be.an.instanceOf(Error);
-            expect(() => invalidChannel.subscribe({}, empty)).to.throw().and.be.an.instanceOf(Error);
-            expect(() => invalidChannel.subscribe([], empty)).to.throw().and.be.an.instanceOf(Error);
-            expect(() => invalidChannel.subscribe(['a'], empty)).to.throw().and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.subscribe(undefined, empty))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.subscribe(null, empty))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.subscribe({}, empty))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.subscribe([], empty))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
+            expect(() => invalidChannel.subscribe(["a"], empty))
+                .to.throw()
+                .and.be.an.instanceOf(Error);
         });
 
-        it("should make sure a channel name can consist of valid characters and be between 1 to 255 characters long", (done) => {
+        it("should make sure a channel name can consist of valid characters and be between 1 to 255 characters long", done => {
             let topic_generation_publish = (length: number) => {
                 const topic_name = randomValidChannelOrTopicName(length);
                 channel.publish(topic_name, undefined);
@@ -104,10 +127,14 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
                 channel.subscribe(topic_name, () => void 0);
             };
 
-            range(1, 255).subscribe(length => {
-                expect(() => topic_generation_publish(length)).not.to.throw();
-                expect(() => topic_generation_subscribe(length)).not.to.throw();
-            }, undefined, done);
+            range(1, 255).subscribe(
+                length => {
+                    expect(() => topic_generation_publish(length)).not.to.throw();
+                    expect(() => topic_generation_subscribe(length)).not.to.throw();
+                },
+                undefined,
+                done
+            );
         });
 
         it("should make sure a topic with allowed characters can be published to", () => {
@@ -121,9 +148,9 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
 
             expect(() => channel.subscribe("Foobar_$_Foobar", () => void 0)).to.throw();
             expect(() => channel.subscribe("Foobar_%_Foobar", () => void 0)).to.throw();
-        })
+        });
 
-        it("should make sure a topic with special sequence can be published to if configured in validation options", function (done) {
+        it("should make sure a topic with special sequence can be published to if configured in validation options", function(done) {
             // for PubSubMicro we allow custom validation to include _%_ and _$_
             if (factory.name !== "PubSubMicro") {
                 this.skip();
@@ -133,23 +160,25 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
             const validationOptions = {
                 channelNameMaxLength: 63,
                 topicNameMaxLength: 255,
-                allowSpecialTopicSequences: true,
-            }
+                allowSpecialTopicSequences: true
+            };
 
             const getLinkedPubSubImplementation = factory.getLinkedPubSubImplementation as Function;
             const pubsub = getLinkedPubSubImplementation(2, { validationOptions })[0];
             const channelName = randomValidChannelOrTopicName();
             pubsub.start().then(() => {
-                pubsub.channel(channelName).then(channel => {
+                pubsub
+                    .channel(channelName)
+                    .then(channel => {
+                        expect(() => channel.publish("Foobar_$_Foobar", undefined)).not.to.throw();
+                        expect(() => channel.publish("Foobar_%_Foobar", undefined)).not.to.throw();
 
-                    expect(() => channel.publish("Foobar_$_Foobar", undefined)).not.to.throw();
-                    expect(() => channel.publish("Foobar_%_Foobar", undefined)).not.to.throw();
-
-                    expect(() => channel.subscribe("Foobar_$_Foobar", () => void 0)).not.to.throw();
-                    expect(() => channel.subscribe("Foobar_%_Foobar", () => void 0)).not.to.throw();
-                    done();
-                }).catch(err => done(err))
-            })
+                        expect(() => channel.subscribe("Foobar_$_Foobar", () => void 0)).not.to.throw();
+                        expect(() => channel.subscribe("Foobar_%_Foobar", () => void 0)).not.to.throw();
+                        done();
+                    })
+                    .catch(err => done(err));
+            });
         });
 
         it("should be ok to publish a plain object", done => {
@@ -165,14 +194,15 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
                 this.skip();
                 return;
             }
-            let non_plain_object = new class {
-                constructor() {
-                }
-            }();
+            let non_plain_object = new (class {
+                constructor() {}
+            })();
 
             expect(() => {
                 channel.publish(randomValidChannelOrTopicName(), non_plain_object);
-            }).to.throw().and.be.an.instanceOf(Error);
+            })
+                .to.throw()
+                .and.be.an.instanceOf(Error);
             done();
         });
     });

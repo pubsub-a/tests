@@ -9,14 +9,13 @@ import { getRandomKilobytes, randomValidChannelOrTopicName } from "../test_helpe
  */
 
 export const executeHighLoadTests = (factory: ImplementationFactory) => {
-
     describe(`[${factory.name}] should run the highload test`, () => {
-
         let pubsub1: PubSub, pubsub2: PubSub, pubsub3: PubSub;
         let channel1: Channel, channel2: Channel, channel3: Channel;
         let onClient1Disconnected: AsyncSubject<StopStatus>;
         let onClient2Disconnected: AsyncSubject<StopStatus>;
-        let topic: string; let channelName: string;
+        let topic: string;
+        let channelName: string;
 
         beforeEach(done => {
             onClient1Disconnected = new AsyncSubject<StopStatus>();
@@ -46,67 +45,72 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                     onClient2Disconnected.next(status);
                     onClient2Disconnected.complete();
                 });
-                pubsub2.channel(channelName).then((chan) => {
+                pubsub2.channel(channelName).then(chan => {
                     channel2 = chan;
                     channel2_ready.complete();
                 });
             });
 
             pubsub3.start().then(pubsub => {
-                pubsub3.channel(channelName).then((chan) => {
+                pubsub3.channel(channelName).then(chan => {
                     channel3 = chan;
                     channel3_ready.complete();
                 });
             });
-
 
             concat(channel1_ready, channel2_ready, channel3_ready).subscribe(undefined, undefined, () => {
                 done();
             });
         });
 
-        it.skip("should report the socket bytes written", function (done) {
+        it.skip("should report the socket bytes written", function(done) {
             if (factory.name === "PubSubMicro") {
                 this.skip();
             }
 
             const rand = randomValidChannelOrTopicName(1024);
-            let payload = '';
+            let payload = "";
             let megabytes = 50 * 1024;
             while (megabytes-- >= 0) {
                 payload += rand;
             }
-            console.info("go")
+            console.info("go");
 
-            channel2.subscribe("A_MESSAGE", (pl) => { console.info("got pl2") })
-            channel3.subscribe("A_MESSAGE", (pl) => { console.info("got pl3") })
+            channel2.subscribe("A_MESSAGE", pl => {
+                console.info("got pl2");
+            });
+            channel3.subscribe("A_MESSAGE", pl => {
+                console.info("got pl3");
+            });
 
-            range(0, 100).subscribe(n => {
-                channel1.publish("A_MESSAGE", payload);
-            }, undefined, () => {
-                setTimeout(() => {
-                    done();
-                }, 1000)
+            range(0, 100).subscribe(
+                n => {
+                    channel1.publish("A_MESSAGE", payload);
+                },
+                undefined,
+                () => {
+                    setTimeout(() => {
+                        done();
+                    }, 1000);
+                }
+            );
+        });
 
-            })
-
-        })
-
-        it("should disconnect when sending a message with roughly more than 37 kilobytes", function (done) {
+        it("should disconnect when sending a message with roughly more than 37 kilobytes", function(done) {
             if (factory.name === "PubSubMicro") {
                 this.skip();
             }
 
-            onClient1Disconnected.subscribe((status) => {
+            onClient1Disconnected.subscribe(status => {
                 expect(status.reason).to.equal("REMOTE_DISCONNECT");
-                expect(status.code).to.equal(220)
-                expect(status.additionalInfo).to.contain("MAX_MSG_SIZE")
+                expect(status.code).to.equal(220);
+                expect(status.additionalInfo).to.contain("MAX_MSG_SIZE");
                 done();
             });
-            channel1.publish('OVERLARGE_MESSAGE', getRandomKilobytes(37));
-        })
+            channel1.publish("OVERLARGE_MESSAGE", getRandomKilobytes(37));
+        });
 
-        it("should handle tenthousand subscriptions to different topic simultaneously", function (done) {
+        it("should handle tenthousand subscriptions to different topic simultaneously", function(done) {
             // set timeout to a minute for this test
             this.timeout(60_000);
             let subscriptionsRegistered = 10_000;
@@ -117,13 +121,15 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                 const topic = randomValidChannelOrTopicName();
                 let token;
                 let subscriptionTriggered = new Promise(resolve => {
-                    channel1.subscribe(topic, p => {
-                        expect(p).to.equal(payload);
-                        resolve();
-                    }).then(t => {
-                        token = t;
-                        channel2.publish(topic, payload);
-                    });
+                    channel1
+                        .subscribe(topic, p => {
+                            expect(p).to.equal(payload);
+                            resolve();
+                        })
+                        .then(t => {
+                            token = t;
+                            channel2.publish(topic, payload);
+                        });
                 });
 
                 subscriptionTriggered.then(() => {
@@ -135,25 +141,26 @@ export const executeHighLoadTests = (factory: ImplementationFactory) => {
                 });
 
                 subscriptionsRegistered--;
-            };
+            }
         });
 
-        it("should handle a single subscription with tenthousand publishes of 1k", function (done) {
+        it("should handle a single subscription with tenthousand publishes of 1k", function(done) {
             this.timeout(60_000);
             const topic = randomValidChannelOrTopicName();
             let numPublishes = 10_000;
             let numTriggered = 10_000;
 
-            channel1.subscribe(topic, (payload) => {
-                if (--numTriggered <= 0) {
-                    done();
-                }
-            }).then(() => {
-                while (numPublishes-- > 0) {
-                    channel2.publish(topic, getRandomKilobytes(1));
-                }
-            });
-        })
-
-    })
+            channel1
+                .subscribe(topic, payload => {
+                    if (--numTriggered <= 0) {
+                        done();
+                    }
+                })
+                .then(() => {
+                    while (numPublishes-- > 0) {
+                        channel2.publish(topic, getRandomKilobytes(1));
+                    }
+                });
+        });
+    });
 };

@@ -5,12 +5,10 @@ import { ImplementationFactory } from "@pubsub-a/interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeLinkedPubSubTests = (factory: ImplementationFactory) => {
-
     let pubsub1, pubsub2;
     let channel1, channel2;
 
     describe(`[${factory.name}] should pass basic linked pubsub tests`, () => {
-
         beforeEach(done => {
             [pubsub1, pubsub2] = factory.getLinkedPubSubImplementation(2);
 
@@ -42,12 +40,14 @@ export const executeLinkedPubSubTests = (factory: ImplementationFactory) => {
             let topic = randomValidChannelOrTopicName();
             let payload = "foobar";
 
-            channel1.subscribe(topic, p => {
-                expect(p).to.equal(payload);
-                done();
-            }).then(() => {
-                channel2.publish(topic, "foobar");
-            });
+            channel1
+                .subscribe(topic, p => {
+                    expect(p).to.equal(payload);
+                    done();
+                })
+                .then(() => {
+                    channel2.publish(topic, "foobar");
+                });
         });
 
         it("should fire the local subscription only once if we locally publish", done => {
@@ -55,17 +55,19 @@ export const executeLinkedPubSubTests = (factory: ImplementationFactory) => {
             let payload = "foobar";
 
             channel2.subscribe(topic, () => void 0);
-            channel1.subscribe(topic, p => {
-                expect(p).to.equal(payload);
-                done();
-            }).then(() => {
-                channel1.publish(topic, payload);
-            });
+            channel1
+                .subscribe(topic, p => {
+                    expect(p).to.equal(payload);
+                    done();
+                })
+                .then(() => {
+                    channel1.publish(topic, payload);
+                });
         });
 
         // TODO for optimization in the future this might change so that local subscribers don't get publishes via the network that they
         // published themselves
-        it("should fire local subscriptions via the network and not pass the same object reference to local subscribers", function (done) {
+        it("should fire local subscriptions via the network and not pass the same object reference to local subscribers", function(done) {
             if (factory.name == "PubSubMicro") {
                 this.skip();
                 return;
@@ -75,13 +77,14 @@ export const executeLinkedPubSubTests = (factory: ImplementationFactory) => {
             let payload = { foo: "bar" };
 
             channel2.subscribe(topic, () => void 0);
-            channel1.subscribe(topic, p => {
-                expect(p).not.to.equal(payload);
-                done();
-            }).then(() => {
-                channel1.publish(topic, payload);
-            });
+            channel1
+                .subscribe(topic, p => {
+                    expect(p).not.to.equal(payload);
+                    done();
+                })
+                .then(() => {
+                    channel1.publish(topic, payload);
+                });
         });
-
     });
 };

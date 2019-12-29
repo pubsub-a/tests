@@ -7,18 +7,17 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
     let pubsub: PubSub;
 
     describe(`[${factory.name}] should pass common channel tests`, () => {
-
         beforeEach(done => {
             pubsub = factory.getPubSubImplementation();
             pubsub.start().then(() => done());
         });
 
         const expectToBeAChannel = (channel: Channel) => {
-            expect(channel.publish).to.be.a('function');
-            expect(channel.subscribe).to.be.a('function');
-            expect(channel.name).to.be.a('string');
+            expect(channel.publish).to.be.a("function");
+            expect(channel.subscribe).to.be.a("function");
+            expect(channel.name).to.be.a("string");
             expect(channel.name).length.to.be.above(0);
-        }
+        };
 
         it("should create a channel asynchronously", done => {
             pubsub.channel(randomValidChannelOrTopicName()).then((chan: Channel) => {
@@ -31,8 +30,8 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             pubsub.channel(randomValidChannelOrTopicName()).then((chan: Channel) => {
                 expect(chan.pubsub).to.be.ok;
                 done();
-            })
-        })
+            });
+        });
 
         it("should create a channel synchronously and return a promise", () => {
             const promise = pubsub.channel(randomValidChannelOrTopicName());
@@ -42,15 +41,14 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
         });
 
         it("should not share pubsub data between two channels of different name", done => {
-            const channel1Name = "channel1"
-            const channel2Name = "channel2"
+            const channel1Name = "channel1";
+            const channel2Name = "channel2";
             const topic = randomValidChannelOrTopicName();
 
             const c1 = from(pubsub.channel(channel1Name));
             const c2 = from(pubsub.channel(channel2Name));
 
             zip(c1, c2).subscribe(([channel1, channel2]) => {
-
                 const p1 = channel1.subscribe(topic, () => {
                     expect(true).to.be.true;
                     done();
@@ -61,7 +59,6 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
                     expect(false).to.be.true;
                     done("FAILED");
                 });
-
 
                 Promise.all([p1, p2]).then(() => {
                     channel1.publish(topic, {});
@@ -78,13 +75,15 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             const c2 = from(pubsub.channel(channelName));
 
             zip(c1, c2).subscribe(([channel1, channel2]) => {
-                channel1.subscribe(topic, () => {
-                    expect(true).to.be.true;
-                    done();
-                }).then(() => {
-                    channel2.publish(topic, {})
-                });
+                channel1
+                    .subscribe(topic, () => {
+                        expect(true).to.be.true;
+                        done();
+                    })
+                    .then(() => {
+                        channel2.publish(topic, {});
+                    });
             });
         });
     });
-}
+};

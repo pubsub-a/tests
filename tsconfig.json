@@ -5,11 +5,8 @@
         "declaration": false,
         "module": "commonjs",
         "strictNullChecks": true,
-        "lib": [ "es5", "dom", "es2015" ],
-        "types": ["mocha", "chai", "node" ]
+        "lib": ["es5", "dom", "es2015"],
+        "types": ["mocha", "chai", "node"]
     },
-    "include": [
-        "tests/spec/**/*.ts",
-        "tests/*.ts"
-    ]
+    "include": ["tests/spec/**/*.ts", "tests/*.ts"]
 }
