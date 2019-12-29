@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Observable, AsyncSubject, concat } from "rxjs";
 
-import { ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { ImplementationFactory } from "@pubsub-a/interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeLinkedPubSubTests = (factory: ImplementationFactory) => {

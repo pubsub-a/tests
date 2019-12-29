@@ -1,4 +1,4 @@
-import { Channel, ImplementationFactory, PubSub, StopStatus } from "@dynalon/pubsub-a-interfaces";
+import { Channel, ImplementationFactory, PubSub, StopStatus } from "@pubsub-a/interfaces";
 import { expect } from "chai";
 import { AsyncSubject, concat, range } from "rxjs";
 import { getRandomKilobytes, randomValidChannelOrTopicName } from "../test_helper";

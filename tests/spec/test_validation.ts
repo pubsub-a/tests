@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Observable, range } from "rxjs";
 
-import { ImplementationFactory, PubSub, Channel } from "@dynalon/pubsub-a-interfaces";
+import { ImplementationFactory, PubSub, Channel } from "@pubsub-a/interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeValidationTests = (factory: ImplementationFactory) => {

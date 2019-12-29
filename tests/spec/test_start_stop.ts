@@ -1,4 +1,4 @@
-import { ImplementationFactory, PubSub } from "@dynalon/pubsub-a-interfaces";
+import { ImplementationFactory, PubSub } from "@pubsub-a/interfaces";
 import { expect } from "chai";
 import { randomValidChannelOrTopicName } from "../test_helper";
 

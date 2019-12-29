@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import { PubSub, Channel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { PubSub, Channel, ImplementationFactory } from "@pubsub-a/interfaces";
 import { randomString, randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeDisposeAndCleanupTests = (factory: ImplementationFactory) => {

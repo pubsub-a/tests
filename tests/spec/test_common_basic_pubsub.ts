@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { Observable, AsyncSubject, Subject, zip, concat, range } from "rxjs";
 import { take, skip, toArray } from "rxjs/operators";
 
-import { PubSub, Channel, ImplementationFactory } from "@dynalon/pubsub-a-interfaces";
+import { PubSub, Channel, ImplementationFactory } from "@pubsub-a/interfaces";
 import { randomValidChannelOrTopicName } from "../test_helper";
 
 export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) => {

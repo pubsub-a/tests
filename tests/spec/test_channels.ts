@@ -1,4 +1,4 @@
-import { Channel, ImplementationFactory, PubSub } from "@dynalon/pubsub-a-interfaces";
+import { Channel, ImplementationFactory, PubSub } from "@pubsub-a/interfaces";
 import { expect } from "chai";
 import { from, zip } from "rxjs";
 import { randomValidChannelOrTopicName } from "../test_helper";
@@ -46,8 +46,8 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             const channel2Name = "channel2"
             const topic = randomValidChannelOrTopicName();
 
-            const c1 = from<Channel>(pubsub.channel(channel1Name));
-            const c2 = from<Channel>(pubsub.channel(channel2Name));
+            const c1 = from(pubsub.channel(channel1Name));
+            const c2 = from(pubsub.channel(channel2Name));
 
             zip(c1, c2).subscribe(([channel1, channel2]) => {
 
@@ -74,8 +74,8 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             const channelName = "channel1";
             const topic = randomValidChannelOrTopicName();
 
-            const c1 = from<Channel>(pubsub.channel(channelName));
-            const c2 = from<Channel>(pubsub.channel(channelName));
+            const c1 = from(pubsub.channel(channelName));
+            const c2 = from(pubsub.channel(channelName));
 
             zip(c1, c2).subscribe(([channel1, channel2]) => {
                 channel1.subscribe(topic, () => {
