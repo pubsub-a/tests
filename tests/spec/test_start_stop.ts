@@ -21,11 +21,6 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
         });
 
         it("should set a clientId after start() is done via promise", function(done) {
-            if (factory.name == "PubSubMicro") {
-                this.skip();
-                return;
-            }
-
             pubsub
                 .start()
                 .catch(v => console.log(v))
