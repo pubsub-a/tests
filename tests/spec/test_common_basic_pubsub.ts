@@ -40,12 +40,12 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             let promise2 = new AsyncSubject();
             let num_additions = 100;
 
-            let p1 = channel.subscribe<number>("topic1", value => {
+            let p1 = channel.subscribe("topic1", value => {
                 count1 += value;
                 if (count1 >= num_additions) promise1.complete();
             });
 
-            let p2 = channel.subscribe<number>("topic2", value => {
+            let p2 = channel.subscribe("topic2", value => {
                 count2 += value;
                 if (count2 >= num_additions) promise2.complete();
             });

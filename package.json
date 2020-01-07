@@ -4,8 +4,8 @@
   "description": "PubSub/A spec test suite",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@pubsub-a/interfaces": "^0.7.1",
-    "@pubsub-a/micro": "^0.9.3",
+    "@pubsub-a/interfaces": "^0.7.2",
+    "@pubsub-a/micro": "^0.9.4",
     "@types/chai": "^4.2.7",
     "@types/mocha": "^5.2.7",
     "@types/node": "^13.1.1",
@@ -31,6 +31,7 @@
     "test": "npm run build && npm run bundle && npm run node-tests && npm run browser-tests"
   },
   "dependencies": {
+    "@dynalon/pubsub-a-server-node": "^0.6.18",
     "ipterate": "^1.1.1",
     "lodash": "^4.17.10"
   }
