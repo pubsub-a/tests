@@ -17,21 +17,19 @@ try {
     const factory = require("@pubsub-a/micro/dist/spec-validation");
     factories.push(factory);
 } catch (err) {
-    console.log('Could not load pubsub-micro tests: ' + err);
+    console.log("Could not load pubsub-micro tests: " + err);
 }
 
-// try {
-//     // pubsub-server-a-node
-//     const factory = require("@dynalon/pubsub-a-server-node/dist/spec-validation");
-//     factories.push(factory);
-// } catch (err) {
-//     console.log('Could not load pubsub-server-node tests: ' + err);
-// }
+try {
+    // pubsub-server-a-node
+    const factory = require("@dynalon/pubsub-a-server-node/dist/spec-validation");
+    factories.push(factory);
+} catch (err) {
+    console.log("Could not load pubsub-server-node tests: " + err);
+}
 
 function runTests() {
-
-    factories.forEach(function (factory) {
-
+    factories.forEach(function(factory) {
         /* TODO: this doesn't work anymore, the polyfill is not applied?
         require("es6-promise").polyfill();
         const getRandomInt = (min: number, max: number) => {
@@ -57,9 +55,9 @@ function runTests() {
 
         // executeSocketIOTests(factory);
 
-        const runningInCIEnvironment = typeof process.env['CI'] !== 'undefined';
-        const runHighloadTests = typeof process.env['HIGHLOAD'] !== 'undefined';
-        const runningInBrowser = typeof window !== 'undefined';
+        const runningInCIEnvironment = typeof process.env["CI"] !== "undefined";
+        const runHighloadTests = typeof process.env["HIGHLOAD"] !== "undefined";
+        const runningInBrowser = typeof window !== "undefined";
 
         // highload tests are only run when HIGHLOAD env variable is set and we are NOT a CI system (since the
         // number of sockets and required bandwidth/load would disturb most cloud providers)
@@ -69,10 +67,10 @@ function runTests() {
             if (!runningInBrowser) {
                 // executeHighloadSocketTests(factory);
             } else {
-                console.info("Not running high load sockets tests as I am running inside a browser")
+                console.info("Not running high load sockets tests as I am running inside a browser");
             }
         } else {
-            console.info("Not running High load tests")
+            console.info("Not running High load tests");
         }
     });
 }

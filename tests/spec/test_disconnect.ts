@@ -1,4 +1,4 @@
-import { ImplementationFactory, PubSub } from "@pubsub-a/interfaces";
+import { ImplementationFactory, PubSub, ClientDisconnect, ControlMessage } from "@pubsub-a/interfaces";
 import { expect } from "chai";
 import { randomString } from "../test_helper";
 
@@ -38,16 +38,23 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
             if (pubsub2.isStopped !== true) await pubsub2.stop();
         });
 
-        // The __internal channel should not be forwarded between pubsub instances; instead it is a communications
+        // The __control channel should not be forwarded between pubsub instances; instead it is a communications
         // channel to make use of reserved or implementation dependent features
-        it("should not be possible to fake emit on the __internal channel", function(done) {
+        it("should not be possible to fake emit on the __control channel", function(done) {
             const failure = () => done("Failure: Subscription triggered");
 
-            pubsub1.channel("__internal").then(async internalChannel1 => {
-                await Promise.all([internalChannel1.subscribe("CLIENT_DISCONNECT", failure)]);
-                const internalChannel2 = await pubsub2.channel("__internal");
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.subscribe("CONTROL", failure);
+                const controlChannel2 = await pubsub2.channel("__control");
                 expect(() =>
-                    internalChannel2.publish("CLIENT_DISCONNECT", { clientId: id2, reason: "DISCONNECT" })
+                    controlChannel2.publish(
+                        "CONTROL" as any,
+                        {
+                            clientId: id2,
+                            type: "CLIENT_DISCONNECT",
+                            reason: "DISCONNECT"
+                        } as any
+                    )
                 ).to.throw();
                 done();
             });
@@ -55,24 +62,27 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
         it("should be able to subscribe to a disconnect event from other clients", function(done) {
             // client1 wants to be notified if client2 disconnects
-            pubsub1.channel("__internal").then(async internalChannel => {
-                await internalChannel.subscribe("CLIENT_DISCONNECT", message => {
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.subscribe("CONTROL", (message: ClientDisconnect) => {
+                    console.info("CON SUB");
+                    expect(message.type).to.equal("CLIENT_DISCONNECT");
                     expect(message.clientId).to.equal(id2);
                     done();
                 });
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                console.info("GO SUB");
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
                 disconnectClient(pubsub1, id2);
             });
         });
 
         it("should not trigger a disconnect event when we unsubscribed from it", function(done) {
             // client1 wants to be notified if client2 disconnects
-            pubsub1.channel("__internal").then(async internalChannel => {
-                await internalChannel.subscribe("CLIENT_DISCONNECT", () => {
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.subscribe("CONTROL", () => {
                     done("Error: Disconnect event called");
                 });
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
                 disconnectClient(pubsub1, id2);
                 setTimeout(() => done(), 100);
             });
@@ -81,15 +91,19 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
         it("should be able to subscribe multiple times to a disconnected client but triggers only a single subscribe", function(done) {
             // client1 wants to be notified if client2 disconnects
             let numCalled = 0;
-            pubsub1.channel("__internal").then(async internalChannel => {
+            pubsub1.channel("__control").then(async controlChannel => {
                 const subscribeToAllDisconnects = () => {
-                    return internalChannel.subscribe("CLIENT_DISCONNECT", message => {
+                    return controlChannel.subscribe("CONTROL", (message: ClientDisconnect) => {
+                        expect(message.type).to.equal("CLIENT_DISCONNECT");
                         expect(message.clientId).to.equal(id2);
                         ++numCalled;
                     });
                 };
                 const subscribeToClient2Disconnect = () => {
-                    return internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                    return controlChannel.publish("CONTROL_SUBSCRIBE", {
+                        type: "SUBSCRIBE_DISCONNECT",
+                        clientId: id2
+                    });
                 };
                 await Promise.all([
                     subscribeToAllDisconnects(),
@@ -106,17 +120,17 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
         it("should call the InternalChannelMessage callback even when we are already subscribed", function(done) {
             // client1 wants to be notified if client2 disconnects
-            pubsub1.channel("__internal").then(async internalChannel => {
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
                 done();
             });
         });
 
         it("should not trigger subscribe_disconnect events for ids we never subscribed", function(done) {
             // client1 wants to be notified if client2 disconnects
-            pubsub1.channel("__internal").then(async internalChannel => {
-                await internalChannel.subscribe("CLIENT_DISCONNECT", () => {
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.subscribe("CONTROL", () => {
                     done("Error: shouldnt receive a disconnect event");
                 });
                 disconnectClient(pubsub1, id2);
@@ -126,8 +140,8 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
         it("should not send a disconnect event when subscribing to it after the instance has stopped", function(done) {
             pubsub2.stop().then(async function() {
-                const internalChannel = await pubsub1.channel("__internal");
-                await internalChannel.subscribe("CLIENT_DISCONNECT", message => {
+                const internalChannel = await pubsub1.channel("__control");
+                await internalChannel.subscribe("CONTROL", (message: ClientDisconnect) => {
                     expect.fail("Should not receive the CLIENT_DISCONNECT message");
                 });
                 setTimeout(done, 100);
@@ -136,94 +150,103 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
 
         it("should send a NOT_CONNECTED when we subscribe to a disconnect id of a client that is not currently connected", function(done) {
             pubsub2.stop().then(async function() {
-                const internalChannel = await pubsub1.channel("__internal");
-                await internalChannel.subscribe("CLIENT_DISCONNECT", message => {
+                const controlChannel = await pubsub1.channel("__control");
+                await controlChannel.subscribe("CONTROL", (message: ClientDisconnect) => {
+                    expect(message.type).to.equal("CLIENT_DISCONNECT");
                     expect(message.reason).to.equal("NOT_CONNECTED");
                     expect(message.clientId).to.equal(id2);
                     done();
                 });
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
             });
         });
 
         it("should only unsubscribe from disconnect events when unsubscribe_disconnect is called exactly the same number of times as subscribe_disconnect", done => {
-            pubsub1.channel("__internal").then(async internalChannel => {
-                await internalChannel.subscribe("CLIENT_DISCONNECT", message => {
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.subscribe("CONTROL", message => {
                     done("Error: shouldnt receive a disconnect event");
                 });
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
                 disconnectClient(pubsub1, id2);
                 setTimeout(() => done(), 250);
             });
         });
 
         it("should not unsubscribe from disconnect events when unsubscribe_disconnect is called less often than subscribe_disconnect", done => {
-            pubsub1.channel("__internal").then(async internalChannel => {
-                await internalChannel.subscribe("CLIENT_DISCONNECT", message => {
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.subscribe("CONTROL", (message: ClientDisconnect) => {
+                    if (message.type !== "CLIENT_DISCONNECT") return;
                     expect(message.clientId).to.equal(id2);
                     expect(message.reason).to.equal("DISCONNECT");
                     done();
                 });
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
                 disconnectClient(pubsub1, id2);
             });
         });
 
         it("should not unsubscribe from disconnect events when unsubscribe_disconnect is called less often than subscribe_disconnect with intertwined calls", done => {
-            pubsub1.channel("__internal").then(async internalChannel => {
-                await internalChannel.subscribe("CLIENT_DISCONNECT", message => {
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.subscribe("CONTROL", (message: ControlMessage) => {
+                    if (message.type !== "CLIENT_DISCONNECT") return;
                     expect(message.clientId).to.equal(id2);
                     expect(message.reason).to.equal("DISCONNECT");
                     done();
                 });
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+
                 disconnectClient(pubsub1, id2);
             });
         });
 
         it("should error when unsubscribe_disconnect is called more often than subscribe_disconnect", done => {
-            pubsub1.channel("__internal").then(async internalChannel => {
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+            pubsub1.channel("__control").then(async controlChannel => {
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
 
-                await internalChannel.publish("SUBSCRIBE_DISCONNECT", id2);
-                await internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
+                await controlChannel.publish("CONTROL_UNSUBSCRIBE", { type: "UNSUBSCRIBE_DISCONNECT", clientId: id2 });
 
                 expect(() => {
-                    internalChannel.publish("UNSUBSCRIBE_DISCONNECT", id2);
+                    controlChannel.publish("CONTROL_UNSUBSCRIBE", {
+                        type: "UNSUBSCRIBE_DISCONNECT",
+                        clientId: id2
+                    });
                 }).to.throw();
                 done();
             });

@@ -2,13 +2,13 @@
 # yarn lockfile v1
 
 
-"@dynalon/pubsub-a-server-node@^0.6.18":
-  version "0.6.18"
-  resolved "https://npm.pkg.github.com/download/@dynalon/pubsub-a-server-node/0.6.18/9949a928aea64f016ce341d94882e2a6792efc359af38e2fad2a2ce1f9ec1fa2#a0bacdbaddbacae1f993b55f93e62817d2a4dc38"
-  integrity sha512-Z+W+WY3G6XeZfvTcTxHk28T0yr/iCbOTABRdQSxrfVVFa3T4M8c8p6/0Co9BCJ6XxAURmxnjl4csYNbwa4fb+g==
+"@dynalon/pubsub-a-server-node@^0.6.21":
+  version "0.6.21"
+  resolved "https://npm.pkg.github.com/download/@dynalon/pubsub-a-server-node/0.6.21/bc4c288f0e9a53910b6a46db46a3217f573243320e23d5617e96b4c82cf35fef#93d1f214a00e5c6a7f3f1d780e1d85fca9579ed8"
+  integrity sha512-b8ymIVYxw5ZvbeWvYf0I9Qeaid/FdytjZptNZa7G9opTvCOA+N35qzE2Fm5Gt/6P3m4iZsv8OJP6r7t5ixqJpw==
   dependencies:
-    "@pubsub-a/interfaces" "^0.7.0"
-    "@pubsub-a/micro" ">=0.9.0"
+    "@pubsub-a/interfaces" "^0.7.6"
+    "@pubsub-a/micro" "^0.9.6"
     "@types/commander" "^2.12.2"
     "@types/engine.io-client" "^3.1.2"
     "@types/socket.io" "1.4.31"
@@ -24,29 +24,17 @@
     socket.io-client "^2.0.4"
     winston "^3.0.0"
 
-"@pubsub-a/interfaces@^0.7.0":
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/@pubsub-a/interfaces/-/interfaces-0.7.1.tgz#39fb0a7d7b862f77e5d7ea8de8a7e222165436dc"
-  integrity sha512-hGu/I/A2XwDL+tCrfwG0Yp4pBOpTEUtONEUTKMeCLyg1//kOYO++PLw60y3jD7bBtQuOljUkHtRrz/8yu5d5pw==
+"@pubsub-a/interfaces@^0.7.6":
+  version "0.7.6"
+  resolved "https://registry.yarnpkg.com/@pubsub-a/interfaces/-/interfaces-0.7.6.tgz#9ff0299bb17a2f2083f917905979d3356c80aac1"
+  integrity sha512-olqOJenTXONkdzG7oM9PY1leOtdayNK6ODW+jgk5P1fqalXfMv8+m7o56K3vHIdHc9rKyFyJS2RrSiIrb9P11w==
   dependencies:
     prettier "^1.19.1"
 
-"@pubsub-a/interfaces@^0.7.2":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@pubsub-a/interfaces/-/interfaces-0.7.2.tgz#152b90cb1aa1f5c7c7579392564b56e73bea783c"
-  integrity sha512-h2mRgsKLEuB2o5fftyo4UbJf8ZdH+uFXotqHHk9Rp5y9ZHzhwwzgaU7mUPPYjq5YbeoRqyuUO322G2GFaqiQeA==
-  dependencies:
-    prettier "^1.19.1"
-
-"@pubsub-a/micro@>=0.9.0":
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/@pubsub-a/micro/-/micro-0.9.3.tgz#8f3d50fe27aa901308694c7412fb20427cce6a57"
-  integrity sha512-QnYkLFeEItIfyEPVdi0whDxmdX0Wy5MQmpwttJNcAe9JHdojzzAwR9iTjnHX+rSbIHg2CjaXvOkaIOvdXmo8lQ==
-
-"@pubsub-a/micro@^0.9.4":
-  version "0.9.4"
-  resolved "https://registry.yarnpkg.com/@pubsub-a/micro/-/micro-0.9.4.tgz#bb907d238996a2c7bc6a898ce1f19d35ee8530e8"
-  integrity sha512-Z/3dhMjKSSPdLB7gT+L5uWYqPG2tyy3gRNNKuYFX6+IpFJsI8ore8p1xcEiO074e90VEziR0mVGpH6E37xflLQ==
+"@pubsub-a/micro@^0.9.6":
+  version "0.9.6"
+  resolved "https://registry.yarnpkg.com/@pubsub-a/micro/-/micro-0.9.6.tgz#7730959c6b367868c99232ac84a8808d881725a7"
+  integrity sha512-8YgqOYwVoVy8tyPUNlrY70NVvWlDE4dsexuOx6+EFfk4BPFFUzGZG7/VeoNor9QYghwniMm+RMobMEIWXrA5Sg==
 
 "@types/chai@^4.2.7":
   version "4.2.7"
