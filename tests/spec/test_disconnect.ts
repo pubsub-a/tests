@@ -3,13 +3,14 @@ import { expect } from "chai";
 import { randomString } from "../test_helper";
 
 export const executeDisconnectTests = (factory: ImplementationFactory) => {
-    // __INSTRUMENTATION works for server in debug mode
-    const disconnectClient = (pubsub: PubSub, clientId: string, msg: string = "INSTRUMENTATION DISCONNECT") => {
-        pubsub.channel("__INSTRUMENTATION").then(channel => {
-            channel.publish("DISCONNECT_CLIENT", {
+    const disconnectClient = (pubsub: PubSub, clientId: string, msg: string = "TEST DISCONNECT") => {
+        pubsub.channel("__control").then(channel => {
+            const disconnectMsg = {
+                type: "DISCONNECT_CLIENT",
                 clientId,
                 reason: { reason: "REMOTE_DISCONNECT", additionalInfo: msg }
-            });
+            };
+            (channel as any).publish("CONTROL_COMMAND", disconnectMsg);
         });
     };
 
@@ -64,12 +65,10 @@ export const executeDisconnectTests = (factory: ImplementationFactory) => {
             // client1 wants to be notified if client2 disconnects
             pubsub1.channel("__control").then(async controlChannel => {
                 await controlChannel.subscribe("CONTROL", (message: ClientDisconnect) => {
-                    console.info("CON SUB");
                     expect(message.type).to.equal("CLIENT_DISCONNECT");
                     expect(message.clientId).to.equal(id2);
                     done();
                 });
-                console.info("GO SUB");
                 await controlChannel.publish("CONTROL_SUBSCRIBE", { type: "SUBSCRIBE_DISCONNECT", clientId: id2 });
                 disconnectClient(pubsub1, id2);
             });

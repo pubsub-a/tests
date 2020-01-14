@@ -31,6 +31,13 @@
   dependencies:
     prettier "^1.19.1"
 
+"@pubsub-a/interfaces@^0.7.7":
+  version "0.7.7"
+  resolved "https://registry.yarnpkg.com/@pubsub-a/interfaces/-/interfaces-0.7.7.tgz#be2f5c45acfe78db5c5e40dc70ceff8e41dc631a"
+  integrity sha512-cQrpTmCjxx6W2cDphizw3oMdtRj2MeY1pMbGGefBZpOSwT5N/l0F2f6GqCOouT81KvdyYjjqxaetJ+uE3JFC9g==
+  dependencies:
+    prettier "^1.19.1"
+
 "@pubsub-a/micro@^0.9.6":
   version "0.9.6"
   resolved "https://registry.yarnpkg.com/@pubsub-a/micro/-/micro-0.9.6.tgz#7730959c6b367868c99232ac84a8808d881725a7"
