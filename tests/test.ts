@@ -4,6 +4,7 @@ import { executeCommonBasicPubSubTests } from "./spec/test_common_basic_pubsub";
 import { executeDisconnectTests } from "./spec/test_disconnect";
 import { executeDisposeAndCleanupTests } from "./spec/test_dispose_and_cleanup";
 import { executeHighLoadTests } from "./spec/test_highload";
+import { executeErrorHandlingTests } from "./spec/test_errorhandling";
 // import { executeHighloadSocketTests } from "./spec/test_highload_sockets";
 import { executeLinkedPubSubTests } from "./spec/test_linked_pubsub";
 import { executeStartStopTests } from "./spec/test_start_stop";
@@ -52,6 +53,7 @@ function runTests() {
         executeLinkedPubSubTests(factory);
         executeDisposeAndCleanupTests(factory);
         executeDisconnectTests(factory);
+        executeErrorHandlingTests(factory);
 
         // executeSocketIOTests(factory);
 
