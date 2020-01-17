@@ -20,6 +20,14 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
             channelName = randomValidChannelOrTopicName();
         });
 
+        afterEach(done => {
+            if (pubsub.isStarted && !pubsub.isStopped) {
+                pubsub.stop().then(() => done());
+            } else {
+                done();
+            }
+        });
+
         it("should set a clientId after start() is done via promise", function(done) {
             pubsub
                 .start()

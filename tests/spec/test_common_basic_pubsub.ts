@@ -21,6 +21,12 @@ export const executeCommonBasicPubSubTests = (factory: ImplementationFactory) =>
             });
         });
 
+        afterEach(done => {
+            if (!pubsub.isStopped) {
+                pubsub.stop().then(() => done());
+            }
+        });
+
         it("should accept a subscription and fire it when published", done => {
             const topic = "myTopic";
             const subscriptionFunction = (n: number) => {

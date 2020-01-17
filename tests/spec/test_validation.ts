@@ -13,6 +13,12 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
             pubsub.start().then(() => done());
         });
 
+        afterEach(done => {
+            if (!pubsub.isStopped) {
+                pubsub.stop().then(() => done());
+            }
+        });
+
         it("should make sure a channel name can only be of type string", () => {
             // we need to cast so that typescript does not already catch our errors
             let invalidPubSub = pubsub as any;
@@ -175,6 +181,7 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
 
                         expect(() => channel.subscribe("Foobar_$_Foobar", () => void 0)).not.to.throw();
                         expect(() => channel.subscribe("Foobar_%_Foobar", () => void 0)).not.to.throw();
+                        pubsub.stop()
                         done();
                     })
                     .catch(err => done(err));

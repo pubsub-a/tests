@@ -21,6 +21,12 @@ export const executeDisposeAndCleanupTests = (factory: ImplementationFactory) =>
             });
         });
 
+        afterEach(done => {
+            if (!pubsub.isStopped) {
+                pubsub.stop().then(() => done());
+            }
+        });
+
         it("should make sure the dispose function returns a promise that resolves with a count", () => {
             return channel
                 .subscribe(topic, () => void 0)

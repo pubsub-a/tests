@@ -36,6 +36,15 @@ export const executeLinkedPubSubTests = (factory: ImplementationFactory) => {
             });
         });
 
+        afterEach(() => {
+            if (!pubsub1.isStopped) {
+                pubsub1.stop();
+            }
+            if (!pubsub2.isStopped) {
+                pubsub2.stop();
+            }
+        });
+
         it("should receive a simple publish across linked instances using Promise", done => {
             let topic = randomValidChannelOrTopicName();
             let payload = "foobar";

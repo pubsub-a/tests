@@ -12,6 +12,12 @@ export const executeChannelTests = (factory: ImplementationFactory) => {
             pubsub.start().then(() => done());
         });
 
+        afterEach(done => {
+            if (!pubsub.isStopped) {
+                pubsub.stop().then(() => done());
+            }
+        });
+
         const expectToBeAChannel = (channel: Channel) => {
             expect(channel.publish).to.be.a("function");
             expect(channel.subscribe).to.be.a("function");
