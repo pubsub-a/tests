@@ -1,38 +1,38 @@
 {
-  "name": "@pubsub-a/tests",
-  "version": "0.2.1",
-  "description": "PubSub/A spec test suite",
-  "license": "UNLICENSED",
-  "devDependencies": {
-    "@pubsub-a/interfaces": "^0.7.7",
-    "@pubsub-a/micro": "^0.9.6",
-    "@types/chai": "^4.2.7",
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^13.1.1",
-    "chai": "^4.2.0",
-    "es6-promise": "^4.2.4",
-    "karma": "^1.7.1",
-    "karma-chai": "^0.1.0",
-    "karma-chrome-launcher": "^2.2.0",
-    "karma-cli": "^1.0.1",
-    "karma-firefox-launcher": "^1.0.1",
-    "karma-mocha": "^1.3.0",
-    "mocha": "^6.2.2",
-    "rxjs": "^6.1.0",
-    "typescript": "^3.7.4",
-    "webpack": "^3.5.6"
-  },
-  "scripts": {
-    "build": "tsc",
-    "develop": "tsc --watch",
-    "bundle": "webpack",
-    "node-tests": "mocha --timeout 5000 tests/test.js",
-    "browser-tests": "karma start",
-    "test": "npm run build && npm run bundle && npm run node-tests && npm run browser-tests"
-  },
-  "dependencies": {
-    "@dynalon/pubsub-a-server-node": "^0.6.21",
-    "ipterate": "^1.1.1",
-    "lodash": "^4.17.10"
-  }
+    "name": "@pubsub-a/tests",
+    "version": "0.2.1",
+    "description": "PubSub/A spec test suite",
+    "license": "UNLICENSED",
+    "devDependencies": {
+        "@pubsub-a/interfaces": "^0.7.7",
+        "@pubsub-a/micro": "^0.9.6",
+        "@types/chai": "^4.2.7",
+        "@types/mocha": "^8.0.4",
+        "@types/node": "^13.1.1",
+        "chai": "^4.2.0",
+        "es6-promise": "^4.2.4",
+        "karma": "^1.7.1",
+        "karma-chai": "^0.1.0",
+        "karma-chrome-launcher": "^2.2.0",
+        "karma-cli": "^1.0.1",
+        "karma-firefox-launcher": "^1.0.1",
+        "karma-mocha": "^1.3.0",
+        "mocha": "^8.2.1",
+        "rxjs": "^6.1.0",
+        "typescript": "^3.7.4",
+        "webpack": "^3.5.6"
+    },
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc --watch",
+        "bundle": "webpack",
+        "node-tests": "mocha --timeout 5000 tests/test.js",
+        "browser-tests": "karma start",
+        "test": "npm run build && npm run bundle && npm run node-tests && npm run browser-tests"
+    },
+    "dependencies": {
+        "@dynalon/pubsub-a-server-node": "^0.7.0",
+        "ipterate": "^1.1.1",
+        "lodash": "^4.17.10"
+    }
 }

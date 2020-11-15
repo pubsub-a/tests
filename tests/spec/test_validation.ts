@@ -87,6 +87,12 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
             });
         });
 
+        afterEach(done => {
+            if (!pubsub.isStopped) {
+                pubsub.stop().then(() => done());
+            }
+        });
+
         it("should make sure a topic can only be of type string", () => {
             const invalidChannel: any = channel;
             expect(() => invalidChannel.publish(undefined, "foo"))
@@ -160,7 +166,6 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
             // for PubSubMicro we allow custom validation to include _%_ and _$_
             if (factory.name !== "PubSubMicro") {
                 this.skip();
-                return;
             }
 
             const validationOptions = {
@@ -181,7 +186,7 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
 
                         expect(() => channel.subscribe("Foobar_$_Foobar", () => void 0)).not.to.throw();
                         expect(() => channel.subscribe("Foobar_%_Foobar", () => void 0)).not.to.throw();
-                        pubsub.stop()
+                        pubsub.stop();
                         done();
                     })
                     .catch(err => done(err));
@@ -199,7 +204,6 @@ export const executeValidationTests = (factory: ImplementationFactory) => {
         it("should only be allowed to publish a plain object", function(done) {
             if (factory.name === "PubSubMicro") {
                 this.skip();
-                return;
             }
             let non_plain_object = new (class {
                 constructor() {}
