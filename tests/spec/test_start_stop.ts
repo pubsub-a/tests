@@ -202,7 +202,7 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
     describe("additional start/stop tests for node-client", function() {
         const getPubSub = (options: any) => (factory.getLinkedPubSubImplementation as any)(1, options)[0];
 
-        it("should reject the start promise if no server is reachable at target url", function(done) {
+        it.skip("should reject the start promise if no server is reachable at target url", function(done) {
             // Browser seems to take longer to timeout?
             this.timeout(45_000);
             const pubsub = getPubSub({
@@ -222,7 +222,7 @@ export const executeStartStopTests = (factory: ImplementationFactory) => {
                 });
         });
 
-        it("should not trigger the onStop promise if the initial connect fails", done => {
+        it.skip("should not trigger the onStop promise if the initial connect fails", done => {
             this.timeout(45_000);
             const pubsub = getPubSub({
                 serverUrl: "http://127.0.0.1:6668"

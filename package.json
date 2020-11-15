@@ -11,12 +11,12 @@
         "@types/node": "^13.1.1",
         "chai": "^4.2.0",
         "es6-promise": "^4.2.4",
-        "karma": "^1.7.1",
+        "karma": "^5.2.3",
         "karma-chai": "^0.1.0",
         "karma-chrome-launcher": "^2.2.0",
         "karma-cli": "^1.0.1",
         "karma-firefox-launcher": "^1.0.1",
-        "karma-mocha": "^1.3.0",
+        "karma-mocha": "^2.0.1",
         "mocha": "^8.2.1",
         "rxjs": "^6.1.0",
         "typescript": "^3.7.4",
@@ -31,7 +31,7 @@
         "test": "npm run build && npm run bundle && npm run node-tests && npm run browser-tests"
     },
     "dependencies": {
-        "@dynalon/pubsub-a-server-node": "^0.7.0",
+        "@dynalon/pubsub-a-server-node": "^0.7.1",
         "ipterate": "^1.1.1",
         "lodash": "^4.17.10"
     }
