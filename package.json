@@ -33,6 +33,6 @@
     "dependencies": {
         "@dynalon/pubsub-a-server-node": "^0.7.1",
         "ipterate": "^1.1.1",
-        "lodash": "^4.17.10"
+        "lodash": "^4.17.21"
     }
 }
